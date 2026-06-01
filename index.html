@@ -3,10 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PexiPDF</title>
+<title>PexiPDF - Free Online Image to PDF Converter | Offline Scanner</title>
+<meta name="description" content="Convert JPG, PNG, and WEBP images or existing documents into compressed PDFs instantly. 100% offline, private, and free with integrated text note OCR scanner.">
 <link rel="icon" type="image/png" href="/favicon.png">
 
+<!-- Google Search Site Name Verification Layout -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "PexiPDF",
+  "url": "https://pexipdf.netlify.netlify.app/"
+}
+</script>
+
+<!-- CSS External Libraries -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
+
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@700&display=swap');
 
@@ -55,7 +68,7 @@
 
   .wrap { width: 100%; max-width: 680px; }
 
-  /* HEADER & AUTH */
+  /* HEADER & AUTH LAYOUT */
   header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; position: relative; }
   .logo-img { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; flex-shrink: 0; box-shadow: var(--shadow-md); }
   .logo-fallback { width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#1E6B9A,#0D9DD8);display:grid;place-items:center;font-size:22px;flex-shrink:0;box-shadow:var(--shadow-md);color:white;font-weight:700;font-family:'Playfair Display',serif;letter-spacing:-1px; }
@@ -74,7 +87,7 @@
   #user-avatar:hover { border-color:var(--red); box-shadow:0 0 0 2px rgba(192, 57, 43, 0.2); }
   #g-login-container { min-height: 40px; display:flex; align-items:center; }
 
-  /* SIGN IN PROMPT BANNER */
+  /* DISMISSIBLE SIGN IN PROMPT BANNER */
   #signin-prompt { background:var(--surface); border:1.5px solid var(--border); border-radius:10px; padding:12px 16px; margin-bottom:30px; display:none; align-items:center; justify-content:space-between; box-shadow:var(--shadow); animation: fadeInDown 0.4s ease forwards; }
   @keyframes fadeInDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
   .prompt-text { font-size:13px; font-weight:500; color:var(--text); }
@@ -83,9 +96,8 @@
 
   .section-label { font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px; }
 
-  /* INPUT ROW */
+  /* INPUT INTERFACE BLOCK */
   .input-row { display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:10px; }
-
   #dropzone {
     background:var(--surface);border:2px dashed var(--border);border-radius:14px;padding:28px 20px;
     text-align:center;cursor:pointer;transition:border-color 0.18s,background 0.18s;
@@ -107,7 +119,7 @@
   .action-btn .icon { font-size:24px;line-height:1; }
   .action-btn .text { font-size:13px;font-weight:500; }
 
-  /* SETTINGS */
+  /* COMPILER SETTINGS GRID */
   .settings { display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px;margin-bottom:32px; }
   .setting-box { background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow); }
   .setting-label { font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center; }
@@ -122,7 +134,7 @@
   input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;width:16px;height:16px;background:var(--accent);border-radius:50%;cursor:pointer;box-shadow:0 1px 4px rgba(30,107,154,0.3); }
   .quality-val { color:var(--accent);font-weight:600; }
 
-  /* OUTPUT SETTINGS ROW */
+  /* SYSTEM OUTPUT ADVANCED CONFIG OPTIONS */
   .output-settings { display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px; }
   .toggle-row { display:flex;align-items:center;justify-content:space-between; }
   .toggle-label { font-size:12px;font-weight:500;color:var(--text); }
@@ -133,12 +145,11 @@
   input:checked + .slider-tog { background:var(--accent); }
   input:checked + .slider-tog:before { transform:translateX(16px); }
 
-  /* EST SIZE */
   #est-size-bar { display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;box-shadow:var(--shadow); }
   #est-size-bar .est-icon { font-size:16px; }
   #est-size-val { font-weight:600;color:var(--accent); }
 
-  /* PREVIEW */
+  /* PREVIEW PAGE GRID */
   #preview-section { display:none; }
   .preview-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:14px; }
   .preview-actions { display:flex;gap:8px;align-items:center; }
@@ -202,7 +213,7 @@
   #empty p { font-size:12px;line-height:1.6; }
   .divider { height:1px;background:var(--border);margin:24px 0; }
 
-  /* MODALS */
+  /* OVERLAY MODALS STYLING */
   .modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px); }
   #video-stream { flex:1;width:100%;max-height:calc(100vh - 120px);object-fit:cover;background:#111;border-radius:14px; }
   .cam-controls { height:100px;width:100%;display:flex;align-items:center;justify-content:space-around;margin-top:12px; }
@@ -251,15 +262,11 @@
 
   #toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--text);color:var(--bg);padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:300;transition:transform 0.3s;pointer-events:none;white-space:nowrap; box-shadow:var(--shadow-md); }
   #toast.show { transform:translateX(-50%) translateY(0); }
-
-  @media (max-width:600px) { .settings { grid-template-columns:1fr 1fr; } .output-settings { grid-template-columns:1fr 1fr; } }
-  @media (max-width:420px) { .input-row { grid-template-columns:1fr; } #grid { grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); } .header-title { font-size:22px; } }
-
-  button,.action-btn,.clear-btn,#dropzone,#dl-btn { touch-action:manipulation; }
-  .action-btn:active { transform:scale(0.96); }
 </style>
 
+<!-- Google Identity Authentication Script Framework -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<!-- External Web Processing Core Modules -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -273,10 +280,11 @@
     <img id="logo-img" class="logo-img" src="/favicon.png" alt="PexiPDF" onerror="this.style.display='none';document.getElementById('logo-fb').style.display='grid';">
     <div id="logo-fb" class="logo-fallback" style="display:none;">P</div>
     <div class="header-text">
-      <div class="header-title">Pexi<span>PDF</span></div>
+      <h1 class="header-title">Pexi<span>PDF</span></h1>
       <div class="header-sub">
-        Images to PDF
+        Images & PDFs to PDF
         <span class="badge">100% OFFLINE</span>
+        <a href="https://js.org" target="_blank" title="JS.ORG | JavaScript Community" style="font-size:10px; color:var(--accent); font-weight:600; text-decoration:none;">JS.ORG</a>
       </div>
     </div>
     <div class="header-actions">
@@ -286,8 +294,9 @@
     </div>
   </header>
 
+  <!-- Login Banner Notification Box -->
   <div id="signin-prompt">
-    <span class="prompt-text">👋 Sign in to save your settings & preferences!</span>
+    <span class="prompt-text">👋 Sign in to save your core custom settings & document preferences!</span>
     <button id="close-prompt" title="Dismiss">✕</button>
   </div>
 
@@ -378,7 +387,7 @@
   <div id="preview-section">
     <div class="divider"></div>
     <div class="preview-header">
-      <div class="section-label" style="margin:0">Pages · <span id="count">0</span></div>
+      <h2 class="section-label" style="margin:0">Pages · <span id="count">0</span></h2>
       <div class="preview-actions">
         <button class="clear-btn" id="select-all-btn">☑ Select All</button>
         <button class="undo-btn" id="undo-btn" disabled title="Undo last delete">↩ Undo</button>
@@ -420,6 +429,7 @@
 
 </div>
 
+<!-- Camera Frame modal -->
 <div id="camera-modal" class="modal-overlay">
   <video id="video-stream" autoplay playsinline></video>
   <div id="cam-flash"></div>
@@ -430,6 +440,7 @@
   </div>
 </div>
 
+<!-- Text/OCR entry note modal -->
 <div id="text-modal" class="modal-overlay">
   <div class="modal-box" style="max-width:600px;">
     <h2>Text Note / OCR</h2>
@@ -482,6 +493,7 @@
   </div>
 </div>
 
+<!-- Image Crop Adjustment Modal -->
 <div id="crop-modal" class="modal-overlay">
   <div class="modal-box" style="max-width:800px;">
     <h2>Crop Image</h2>
@@ -493,6 +505,7 @@
   </div>
 </div>
 
+<!-- Document naming structural modal -->
 <div id="name-modal" class="modal-overlay">
   <div class="modal-box">
     <h2>Name your PDF</h2>
@@ -504,6 +517,7 @@
   </div>
 </div>
 
+<!-- Zoom Lightbox Viewer Panel -->
 <div id="lightbox">
   <button id="lightbox-close">✕</button>
   <img id="lightbox-img" src="" alt="Preview">
@@ -514,17 +528,44 @@
   </div>
 </div>
 
+<!-- Chatbot Collapsible Dynamic View -->
+<div id="pexi-chat-wrapper" style="position: fixed; bottom: 24px; right: 24px; z-index: 1000; font-family: 'Inter', sans-serif;">
+  <button id="chat-toggle-btn" style="width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: white; border: none; cursor: pointer; box-shadow: var(--shadow-md); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: transform 0.2s;" onclick="togglePexiChat()">
+    💬
+  </button>
+  <div id="pexi-chat-window" style="display: none; width: 340px; height: 450px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-md); flex-direction: column; position: absolute; bottom: 70px; right: 0; overflow: hidden; animation: fadeInDown 0.3s ease;">
+    <div style="background: var(--accent); color: white; padding: 14px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 18px;">🤖</span>
+        <div>
+          <div style="font-weight: 600; font-size: 14px;">Pexi Assistant</div>
+          <div style="font-size: 10px; opacity: 0.8;">Online Support</div>
+        </div>
+      </div>
+      <button onclick="togglePexiChat()" style="background: none; border: none; color: white; cursor: pointer; font-size: 16px;">✕</button>
+    </div>
+    <div id="chat-message-stream" style="flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: var(--bg);">
+      <div style="background: var(--surface); color: var(--text); padding: 8px 12px; border-radius: 12px 12px 12px 4px; max-width: 85%; align-self: flex-start; font-size: 13px; border: 1px solid var(--border);">
+        Hi! I am your Pexi PDF helper. How can I help you manage your documents today?
+      </div>
+    </div>
+    <div style="padding: 10px; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 8px;">
+      <input type="text" id="chat-input-field" placeholder="Type a message..." style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); font-size: 13px; outline: none;" onkeydown="if(event.key === 'Enter') sendChatMessage()">
+      <button onclick="sendChatMessage()" style="background: var(--accent); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;">Send</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 <canvas id="hidden-canvas" style="display:none;"></canvas>
 
 <script>
-// ─── GOOGLE AUTH (GIS) ───────────────────────────────────────────────────────
+// ─── GOOGLE AUTH PREFERENCES LOGIC ───────────────────────────────────────────
 const GOOGLE_CLIENT_ID = "680651504799-d8mpahe6qo0qhsg1nme2hj8tlfp7cse4.apps.googleusercontent.com";
 const loginContainer = document.getElementById('g-login-container');
 const userAvatar = document.getElementById('user-avatar');
 const signinPrompt = document.getElementById('signin-prompt');
 
-// Decode JWT token to extract user info securely without external libraries
 function parseJwt (token) {
   try {
     const base64Url = token.split('.')[1];
@@ -556,7 +597,6 @@ function updateAuthUI(user) {
     loginContainer.style.display = 'block';
     userAvatar.style.display = 'none';
     userAvatar.src = '';
-    
     if (localStorage.getItem('pexipdf_prompt_dismissed') !== 'true') {
       signinPrompt.style.display = 'flex';
     }
@@ -576,34 +616,90 @@ document.getElementById('close-prompt').addEventListener('click', () => {
   signinPrompt.style.display = 'none';
 });
 
-// Initialize Google GIS API when script loads
+// ─── OPENROUTER AI CHATBOT SYSTEM ENGINE ─────────────────────────────────────
+const OPENROUTER_API_KEY = "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";
+const CHAT_MODEL = "google/gemma-2-9b-it:free";
+
+let chatHistory = [
+  { role: "system", content: "You are Pexi Assistant, an integrated helpful AI helper for PexiPDF. PexiPDF is an instant, privacy-focused application that allows compiling, merging, cropping, splitting, scanning, or compressing documents locally. Keep your answers brief, friendly, scannable, and focused on assisting the user." }
+];
+
+function togglePexiChat() {
+  const windowEl = document.getElementById('pexi-chat-window');
+  const toggleBtn = document.getElementById('chat-toggle-btn');
+  if (windowEl.style.display === 'none' || windowEl.style.display === '') {
+    windowEl.style.display = 'flex';
+    toggleBtn.style.transform = 'scale(0.9)';
+    document.getElementById('chat-input-field').focus();
+  } else {
+    windowEl.style.display = 'none';
+    toggleBtn.style.transform = 'scale(1)';
+  }
+}
+
+async function sendChatMessage() {
+  const inputField = document.getElementById('chat-input-field');
+  const stream = document.getElementById('chat-message-stream');
+  const userText = inputField.value.trim();
+  if (!userText) return;
+  inputField.value = '';
+
+  const userBubble = document.createElement('div');
+  userBubble.style.cssText = "background: var(--accent); color: white; padding: 8px 12px; border-radius: 12px 12px 4px 12px; max-width: 85%; align-self: flex-end; font-size: 13px;";
+  userBubble.textContent = userText;
+  stream.appendChild(userBubble);
+  stream.scrollTop = stream.scrollHeight;
+
+  chatHistory.push({ role: "user", content: userText });
+
+  const botBubble = document.createElement('div');
+  botBubble.style.cssText = "background: var(--surface); color: var(--text); padding: 8px 12px; border-radius: 12px 12px 12px 4px; max-width: 85%; align-self: flex-start; font-size: 13px; border: 1px solid var(--border); opacity: 0.7;";
+  botBubble.textContent = "Typing...";
+  stream.appendChild(botBubble);
+  stream.scrollTop = stream.scrollHeight;
+
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "HTTP-Referer": "https://pexipdf.netlify.app",
+        "X-Title": "PexiPDF",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ model: CHAT_MODEL, messages: chatHistory })
+    });
+
+    const data = await response.json();
+    botBubble.style.opacity = "1";
+    if (data.choices && data.choices[0].message) {
+      const replyText = data.choices[0].message.content;
+      botBubble.textContent = replyText;
+      chatHistory.push({ role: "assistant", content: replyText });
+    } else {
+      botBubble.textContent = "Sorry, I am having trouble pulling a response right now.";
+    }
+  } catch (error) {
+    botBubble.textContent = "Network error. Connection dropped.";
+  }
+  stream.scrollTop = stream.scrollHeight;
+}
+
+// ─── INITIALIZE DYNAMIC SCRIPT ATTACHMENTS ──────────────────────────────────
 window.onload = function () {
   if (window.google) {
-    google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleCredentialResponse
-    });
-    google.accounts.id.renderButton(
-      loginContainer,
-      { theme: "outline", size: "medium", type: "standard", shape: "rectangular" }
-    );
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredentialResponse });
+    google.accounts.id.renderButton(loginContainer, { theme: "outline", size: "medium", type: "standard", shape: "rectangular" });
   }
-  
-  // Check if user is already logged in
   const storedUser = localStorage.getItem('pexipdf_user');
-  if (storedUser) {
-    updateAuthUI(JSON.parse(storedUser));
-  } else {
-    updateAuthUI(null); // Show prompt if not dismissed
-  }
+  if (storedUser) updateAuthUI(JSON.parse(storedUser));
+  else updateAuthUI(null);
 };
 
-
-// ─── INITIALIZE WORKERS ──────────────────────────────────────────────────────
 const pdfjsLib = window['pdfjs-dist/build/pdf'];
 if (pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-// ─── STATE ───────────────────────────────────────────────────────────────────
+// ─── APPLICATION FILE AND RENDERING CONFIGS ──────────────────────────────────
 let images = [];
 let dragSrc = null;
 let currentMediaStream = null;
@@ -613,21 +709,14 @@ let lightboxIdx = 0;
 let cropper = null;
 let cropTargetIdx = null;
 
-// ─── DARK MODE ───────────────────────────────────────────────────────────────
 const themeToggle = document.getElementById('theme-toggle');
 function setTheme(isDark) {
-  if (isDark) {
-    document.documentElement.classList.add('dark');
-    themeToggle.textContent = '☀';
-  } else {
-    document.documentElement.classList.remove('dark');
-    themeToggle.textContent = '☾';
-  }
+  if (isDark) { document.documentElement.classList.add('dark'); themeToggle.textContent = '☀'; } 
+  else { document.documentElement.classList.remove('dark'); themeToggle.textContent = '☾'; }
   localStorage.setItem('pexipdf_theme', isDark ? 'dark' : 'light');
 }
 themeToggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
 
-// ─── SETTINGS (localStorage) ─────────────────────────────────────────────────
 function loadSettings() {
   try {
     const s = JSON.parse(localStorage.getItem('pexipdf_settings') || '{}');
@@ -661,14 +750,12 @@ const qSlider = document.getElementById('quality');
 const qVal = document.getElementById('q-val');
 qSlider.addEventListener('input', () => { qVal.textContent = qSlider.value + '%'; updateEstSize(); });
 
-// ─── EST SIZE ────────────────────────────────────────────────────────────────
 function updateEstSize() {
   const bar = document.getElementById('est-size-bar');
   if (!images.length) { bar.style.display = 'none'; return; }
   const q = parseInt(qSlider.value) / 100;
   const compress = document.getElementById('compress').checked;
   const targetImages = images.filter(i => i.selected).length > 0 ? images.filter(i => i.selected) : images;
-  
   const est = targetImages.reduce((s, i) => s + (i.size || 50000), 0) * q * (compress ? 0.6 : 1.0);
   const estStr = est > 1048576 ? (est/1048576).toFixed(1) + ' MB' : Math.round(est/1024) + ' KB';
   document.getElementById('est-size-val').textContent = estStr;
@@ -677,12 +764,11 @@ function updateEstSize() {
 
 function showToast(msg, duration = 2400) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), duration);
 }
 
-// ─── FILE UPLOAD & PDF PARSING ───────────────────────────────────────────────
+// ─── FILE UPLOAD PROCESSING ──────────────────────────────────────────────────
 const dz = document.getElementById('dropzone');
 const fi = document.getElementById('file-input');
 
@@ -726,7 +812,7 @@ async function processPdf(file) {
   } catch(err) { showToast(`Failed to read PDF: ${file.name}`); }
 }
 
-// ─── CAMERA ──────────────────────────────────────────────────────────────────
+// ─── HARDWARE CAMERA MODULES ──────────────────────────────────────────────────
 const camModal = document.getElementById('camera-modal');
 const videoStream = document.getElementById('video-stream');
 const camCounter = document.getElementById('cam-counter');
@@ -754,7 +840,7 @@ document.getElementById('cam-snap-btn').addEventListener('click', () => {
   }, 'image/jpeg', 0.92);
 });
 
-// ─── TEXT NOTE / OCR ─────────────────────────────────────────────────────────
+// ─── TEXT NOTE CONVERT ENGINE ────────────────────────────────────────────────
 const textModal = document.getElementById('text-modal');
 const textArea = document.getElementById('text-input-area');
 let noteStyles = { bold: false, italic: false, underline: false, align: 'center', bg: '#ffffff' };
@@ -825,7 +911,7 @@ function saveTextNote() {
   }, 'image/png');
 }
 
-// ─── CROPPER ─────────────────────────────────────────────────────────────────
+// ─── CROPPER & OCR CONTEXT MODALS ────────────────────────────────────────────
 const cropModal = document.getElementById('crop-modal');
 const cropImage = document.getElementById('crop-image');
 document.getElementById('crop-cancel-btn').addEventListener('click', () => { if(cropper) cropper.destroy(); cropModal.style.display = 'none'; });
@@ -842,7 +928,6 @@ function openCropModal(idx) {
   cropper = new Cropper(cropImage, { viewMode: 1, autoCropArea: 0.9, background: false });
 }
 
-// ─── OCR TEXT EXTRACTION ─────────────────────────────────────────────────────
 async function runOCR(idx) {
   showToast('🔍 Scanning text... (may take a moment)');
   try {
@@ -851,7 +936,7 @@ async function runOCR(idx) {
   } catch(e) { showToast('❌ OCR failed.'); }
 }
 
-// ─── GRID RENDER & SELECTION ─────────────────────────────────────────────────
+// ─── DASHBOARD RENDERING PIPELINE ────────────────────────────────────────────
 function renderGrid() {
   const grid = document.getElementById('grid'); const sec = document.getElementById('preview-section');
   const empty = document.getElementById('empty'); const genBtn = document.getElementById('gen-btn');
@@ -909,7 +994,7 @@ document.getElementById('undo-btn').addEventListener('click', () => {
   renderGrid(); showToast('↩ Undo — page restored'); document.getElementById('undo-btn').disabled = deletedStack.length === 0;
 });
 
-// ─── LIGHTBOX ────────────────────────────────────────────────────────────────
+// ─── LIGHTBOX FUNCTIONALITY ──────────────────────────────────────────────────
 function openLightbox(idx) { lightboxIdx = idx; document.getElementById('lightbox').style.display = 'flex'; updateLightbox(); }
 function updateLightbox() {
   document.getElementById('lightbox-img').src = images[lightboxIdx].url; document.getElementById('lightbox-img').style.transform = `rotate(${images[lightboxIdx].rotation || 0}deg)`;
@@ -920,7 +1005,7 @@ document.getElementById('lightbox').addEventListener('click', e => { if (e.targe
 document.getElementById('lb-prev').addEventListener('click', e => { e.stopPropagation(); lightboxIdx = (lightboxIdx - 1 + images.length) % images.length; updateLightbox(); });
 document.getElementById('lb-next').addEventListener('click', e => { e.stopPropagation(); lightboxIdx = (lightboxIdx + 1) % images.length; updateLightbox(); });
 
-// ─── GENERATE PDF ────────────────────────────────────────────────────────────
+// ─── FINAL BINARY COMPILER OPERATIONS ─────────────────────────────────────────
 const nameModal = document.getElementById('name-modal');
 const pdfNameInput = document.getElementById('pdf-name-input');
 document.getElementById('gen-btn').addEventListener('click', () => {
@@ -948,7 +1033,7 @@ async function generatePDF() {
     const { jsPDF } = window.jspdf; let pdf = null;
     for (let i = 0; i < targetImages.length; i++) {
       progBar.style.width = Math.round((i / targetImages.length) * 90) + '%'; progLabel.textContent = `Processing page ${i + 1} of ${targetImages.length}…`;
-      await new Promise(r => setTimeout(r, 0)); // yield
+      await new Promise(r => setTimeout(r, 0)); 
       const imgData = await getImageData(targetImages[i].url, quality, targetImages[i].rotation || 0, filterMode);
       const w = imgData.width, h = imgData.height; let pw, ph, ori;
 
@@ -979,7 +1064,7 @@ async function generatePDF() {
     document.getElementById('res-name').textContent = fileName; document.getElementById('res-size').textContent = `${sizeMB} · ${targetImages.length} page(s)`;
     const dlBtn = document.getElementById('dl-btn'); dlBtn.href = url; dlBtn.download = fileName;
     result.style.display = 'flex'; progLabel.textContent = '✅ Done!'; showToast('🎉 PDF ready!'); saveSettings();
-  } catch(err) { console.error(err); progLabel.textContent = '❌ Error'; showToast('Error generating PDF'); } finally { genBtn.disabled = false; }
+  } catch(err) { progLabel.textContent = '❌ Error'; showToast('Error generating PDF'); } finally { genBtn.disabled = false; }
 }
 
 function getImageData(url, quality, rotation, filterMode) {
@@ -1012,41 +1097,5 @@ document.getElementById('share-btn').addEventListener('click', async () => {
   if (navigator.share) await navigator.share({ files: [new File([lastPdfBlob], fileName, { type: 'application/pdf' })], title: fileName }).catch(()=>{});
 });
 </script>
-  <!-- Chatbot Floating Button & Interface -->
-<div id="pexi-chat-wrapper" style="position: fixed; bottom: 24px; right: 24px; z-index: 1000; font-family: 'Inter', sans-serif;">
-  <!-- Floating Circle Toggle Button -->
-  <button id="chat-toggle-btn" style="width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: white; border: none; cursor: pointer; box-shadow: var(--shadow-md); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: transform 0.2s;" onclick="togglePexiChat()">
-    💬
-  </button>
-
-  <!-- Chat Window Window Container -->
-  <div id="pexi-chat-window" style="display: none; width: 340px; height: 450px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-md); flex-direction: column; position: absolute; bottom: 70px; right: 0; overflow: hidden; animation: fadeInDown 0.3s ease;">
-    <!-- Header -->
-    <div style="background: var(--accent); color: white; padding: 14px; display: flex; align-items: center; justify-content: space-between;">
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 18px;">🤖</span>
-        <div>
-          <div style="font-weight: 600; font-size: 14px;">Pexi Assistant</div>
-          <div style="font-size: 10px; opacity: 0.8;">Online Support</div>
-        </div>
-      </div>
-      <button onclick="togglePexiChat()" style="background: none; border: none; color: white; cursor: pointer; font-size: 16px;">✕</button>
-    </div>
-
-    <!-- Message Stream History -->
-    <div id="chat-message-stream" style="flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: var(--bg);">
-      <div style="background: var(--surface); color: var(--text); padding: 8px 12px; border-radius: 12px 12px 12px 4px; max-width: 85%; align-self: flex-start; font-size: 13px; border: 1px solid var(--border);">
-        Hi! I am your Pexi PDF helper. How can I help you manage your documents today?
-      </div>
-    </div>
-
-    <!-- Input Box Control Area -->
-    <div style="padding: 10px; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 8px;">
-      <input type="text" id="chat-input-field" placeholder="Type a message..." style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); font-size: 13px; outline: none;" onkeydown="if(event.key === 'Enter') sendChatMessage()">
-      <button onclick="sendChatMessage()" style="background: var(--accent); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;">Send</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
