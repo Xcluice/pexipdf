@@ -1012,5 +1012,41 @@ document.getElementById('share-btn').addEventListener('click', async () => {
   if (navigator.share) await navigator.share({ files: [new File([lastPdfBlob], fileName, { type: 'application/pdf' })], title: fileName }).catch(()=>{});
 });
 </script>
+  <!-- Chatbot Floating Button & Interface -->
+<div id="pexi-chat-wrapper" style="position: fixed; bottom: 24px; right: 24px; z-index: 1000; font-family: 'Inter', sans-serif;">
+  <!-- Floating Circle Toggle Button -->
+  <button id="chat-toggle-btn" style="width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: white; border: none; cursor: pointer; box-shadow: var(--shadow-md); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: transform 0.2s;" onclick="togglePexiChat()">
+    💬
+  </button>
+
+  <!-- Chat Window Window Container -->
+  <div id="pexi-chat-window" style="display: none; width: 340px; height: 450px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-md); flex-direction: column; position: absolute; bottom: 70px; right: 0; overflow: hidden; animation: fadeInDown 0.3s ease;">
+    <!-- Header -->
+    <div style="background: var(--accent); color: white; padding: 14px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 18px;">🤖</span>
+        <div>
+          <div style="font-weight: 600; font-size: 14px;">Pexi Assistant</div>
+          <div style="font-size: 10px; opacity: 0.8;">Online Support</div>
+        </div>
+      </div>
+      <button onclick="togglePexiChat()" style="background: none; border: none; color: white; cursor: pointer; font-size: 16px;">✕</button>
+    </div>
+
+    <!-- Message Stream History -->
+    <div id="chat-message-stream" style="flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: var(--bg);">
+      <div style="background: var(--surface); color: var(--text); padding: 8px 12px; border-radius: 12px 12px 12px 4px; max-width: 85%; align-self: flex-start; font-size: 13px; border: 1px solid var(--border);">
+        Hi! I am your Pexi PDF helper. How can I help you manage your documents today?
+      </div>
+    </div>
+
+    <!-- Input Box Control Area -->
+    <div style="padding: 10px; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 8px;">
+      <input type="text" id="chat-input-field" placeholder="Type a message..." style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); font-size: 13px; outline: none;" onkeydown="if(event.key === 'Enter') sendChatMessage()">
+      <button onclick="sendChatMessage()" style="background: var(--accent); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;">Send</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
