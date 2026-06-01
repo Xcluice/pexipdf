@@ -646,30 +646,41 @@ async function sendChatMessage() {
   stream.appendChild(botBubble);
   stream.scrollTop = stream.scrollHeight;
 
-  try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  async function fetchReply(modelName) {
+    return await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-        "HTTP-Referer": "https://pexipdf.netlify.app",
+        "HTTP-Referer": "http://localhost:3000", 
         "X-Title": "PexiPDF",
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ model: CHAT_MODEL, messages: chatHistory })
+      body: JSON.stringify({ model: modelName, messages: chatHistory })
     });
+  }
 
-    const data = await response.json();
+  try {
+    let response = await fetchReply(CHAT_MODEL);
+    let data = await response.json();
+
+    if (!data.choices || data.error) {
+      console.log("Primary model busy, switching to backup endpoint...");
+      response = await fetchReply("meta-llama/llama-3-8b-instruct:free");
+      data = await response.json();
+    }
+
     botBubble.style.opacity = "1";
     if (data.choices && data.choices[0].message) {
       const replyText = data.choices[0].message.content;
       botBubble.textContent = replyText;
       chatHistory.push({ role: "assistant", content: replyText });
     } else {
-      botBubble.textContent = "Sorry, I am having trouble pulling a response right now.";
+      botBubble.textContent = "The free AI endpoints are currently overloaded. Please try sending your message again in a few moments.";
     }
   } catch (error) {
+    console.error("OpenRouter Fetch Error:", error);
     botBubble.style.opacity = "1";
-    botBubble.textContent = "Network error. Connection dropped.";
+    botBubble.textContent = "Network connection timed out. Please check your internet connectivity.";
   }
   stream.scrollTop = stream.scrollHeight;
 }
