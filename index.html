@@ -7,17 +7,15 @@
 <meta name="description" content="Convert JPG, PNG, and WEBP images or existing documents into compressed PDFs instantly. 100% offline, private, and free with integrated text note OCR scanner.">
 <link rel="icon" type="image/png" href="/favicon.png">
 
-<!-- Google Search Site Name Verification Layout -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "PexiPDF",
-  "url": "https://pexipdf.netlify.netlify.app/"
+  "url": "https://pexipdf.netlify.app/"
 }
 </script>
 
-<!-- CSS External Libraries -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
 
 <style>
@@ -87,7 +85,7 @@
   #user-avatar:hover { border-color:var(--red); box-shadow:0 0 0 2px rgba(192, 57, 43, 0.2); }
   #g-login-container { min-height: 40px; display:flex; align-items:center; }
 
-  /* DISMISSIBLE SIGN IN PROMPT BANNER */
+  /* SIGN IN PROMPT BANNER */
   #signin-prompt { background:var(--surface); border:1.5px solid var(--border); border-radius:10px; padding:12px 16px; margin-bottom:30px; display:none; align-items:center; justify-content:space-between; box-shadow:var(--shadow); animation: fadeInDown 0.4s ease forwards; }
   @keyframes fadeInDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
   .prompt-text { font-size:13px; font-weight:500; color:var(--text); }
@@ -120,7 +118,7 @@
   .action-btn .text { font-size:13px;font-weight:500; }
 
   /* COMPILER SETTINGS GRID */
-  .settings { display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px;margin-bottom:32px; }
+  .settings { display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px;margin-top:10px;margin-bottom:32px; width: 100%; }
   .setting-box { background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow); }
   .setting-label { font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center; }
 
@@ -135,10 +133,10 @@
   .quality-val { color:var(--accent);font-weight:600; }
 
   /* SYSTEM OUTPUT ADVANCED CONFIG OPTIONS */
-  .output-settings { display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px; }
-  .toggle-row { display:flex;align-items:center;justify-content:space-between; }
+  .output-settings { display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px;margin-bottom:14px; width: 100%; }
+  .toggle-row { display:flex;align-items:center;justify-content:space-between; width: 100%; }
   .toggle-label { font-size:12px;font-weight:500;color:var(--text); }
-  .toggle { position:relative;display:inline-block;width:36px;height:20px; }
+  .toggle { position:relative;display:inline-block;width:36px;height:20px; flex-shrink: 0; }
   .toggle input { opacity:0;width:0;height:0; }
   .slider-tog { position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:20px;transition:0.2s; }
   .slider-tog:before { position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.2s; }
@@ -264,9 +262,7 @@
   #toast.show { transform:translateX(-50%) translateY(0); }
 </style>
 
-<!-- Google Identity Authentication Script Framework -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<!-- External Web Processing Core Modules -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -284,7 +280,6 @@
       <div class="header-sub">
         Images & PDFs to PDF
         <span class="badge">100% OFFLINE</span>
-        <a href="https://js.org" target="_blank" title="JS.ORG | JavaScript Community" style="font-size:10px; color:var(--accent); font-weight:600; text-decoration:none;">JS.ORG</a>
       </div>
     </div>
     <div class="header-actions">
@@ -294,7 +289,6 @@
     </div>
   </header>
 
-  <!-- Login Banner Notification Box -->
   <div id="signin-prompt">
     <span class="prompt-text">👋 Sign in to save your core custom settings & document preferences!</span>
     <button id="close-prompt" title="Dismiss">✕</button>
@@ -429,7 +423,6 @@
 
 </div>
 
-<!-- Camera Frame modal -->
 <div id="camera-modal" class="modal-overlay">
   <video id="video-stream" autoplay playsinline></video>
   <div id="cam-flash"></div>
@@ -440,7 +433,6 @@
   </div>
 </div>
 
-<!-- Text/OCR entry note modal -->
 <div id="text-modal" class="modal-overlay">
   <div class="modal-box" style="max-width:600px;">
     <h2>Text Note / OCR</h2>
@@ -493,7 +485,6 @@
   </div>
 </div>
 
-<!-- Image Crop Adjustment Modal -->
 <div id="crop-modal" class="modal-overlay">
   <div class="modal-box" style="max-width:800px;">
     <h2>Crop Image</h2>
@@ -505,7 +496,6 @@
   </div>
 </div>
 
-<!-- Document naming structural modal -->
 <div id="name-modal" class="modal-overlay">
   <div class="modal-box">
     <h2>Name your PDF</h2>
@@ -517,7 +507,6 @@
   </div>
 </div>
 
-<!-- Zoom Lightbox Viewer Panel -->
 <div id="lightbox">
   <button id="lightbox-close">✕</button>
   <img id="lightbox-img" src="" alt="Preview">
@@ -528,9 +517,8 @@
   </div>
 </div>
 
-<!-- Chatbot Collapsible Dynamic View -->
 <div id="pexi-chat-wrapper" style="position: fixed; bottom: 24px; right: 24px; z-index: 1000; font-family: 'Inter', sans-serif;">
-  <button id="chat-toggle-btn" style="width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: white; border: none; cursor: pointer; box-shadow: var(--shadow-md); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: transform 0.2s;" onclick="togglePexiChat()">
+  <button id="chat-toggle-btn" style="width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: white; border: none; cursor: pointer; box-shadow: var(--shadow-md); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: transform 0.2s;">
     💬
   </button>
   <div id="pexi-chat-window" style="display: none; width: 340px; height: 450px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-md); flex-direction: column; position: absolute; bottom: 70px; right: 0; overflow: hidden; animation: fadeInDown 0.3s ease;">
@@ -542,7 +530,7 @@
           <div style="font-size: 10px; opacity: 0.8;">Online Support</div>
         </div>
       </div>
-      <button onclick="togglePexiChat()" style="background: none; border: none; color: white; cursor: pointer; font-size: 16px;">✕</button>
+      <button id="chat-close-btn" style="background: none; border: none; color: white; cursor: pointer; font-size: 16px;">✕</button>
     </div>
     <div id="chat-message-stream" style="flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: var(--bg);">
       <div style="background: var(--surface); color: var(--text); padding: 8px 12px; border-radius: 12px 12px 12px 4px; max-width: 85%; align-self: flex-start; font-size: 13px; border: 1px solid var(--border);">
@@ -550,8 +538,8 @@
       </div>
     </div>
     <div style="padding: 10px; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 8px;">
-      <input type="text" id="chat-input-field" placeholder="Type a message..." style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); font-size: 13px; outline: none;" onkeydown="if(event.key === 'Enter') sendChatMessage()">
-      <button onclick="sendChatMessage()" style="background: var(--accent); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;">Send</button>
+      <input type="text" id="chat-input-field" placeholder="Type a message..." style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); font-size: 13px; outline: none;">
+      <button id="chat-send-btn" style="background: var(--accent); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;">Send</button>
     </div>
   </div>
 </div>
@@ -645,7 +633,7 @@ async function sendChatMessage() {
   inputField.value = '';
 
   const userBubble = document.createElement('div');
-  userBubble.style.cssText = "background: var(--accent); color: white; padding: 8px 12px; border-radius: 12px 12px 4px 12px; max-width: 85%; align-self: flex-end; font-size: 13px;";
+  userBubble.style.cssText = "background: var(--accent); color: white; padding: 8px 12px; border-radius: 12px 12px 4px 12px; max-width: 85%; align-self: flex-end; font-size: 13px; word-break: break-word;";
   userBubble.textContent = userText;
   stream.appendChild(userBubble);
   stream.scrollTop = stream.scrollHeight;
@@ -653,7 +641,7 @@ async function sendChatMessage() {
   chatHistory.push({ role: "user", content: userText });
 
   const botBubble = document.createElement('div');
-  botBubble.style.cssText = "background: var(--surface); color: var(--text); padding: 8px 12px; border-radius: 12px 12px 12px 4px; max-width: 85%; align-self: flex-start; font-size: 13px; border: 1px solid var(--border); opacity: 0.7;";
+  botBubble.style.cssText = "background: var(--surface); color: var(--text); padding: 8px 12px; border-radius: 12px 12px 12px 4px; max-width: 85%; align-self: flex-start; font-size: 13px; border: 1px solid var(--border); opacity: 0.7; word-break: break-word;";
   botBubble.textContent = "Typing...";
   stream.appendChild(botBubble);
   stream.scrollTop = stream.scrollHeight;
@@ -680,10 +668,19 @@ async function sendChatMessage() {
       botBubble.textContent = "Sorry, I am having trouble pulling a response right now.";
     }
   } catch (error) {
+    botBubble.style.opacity = "1";
     botBubble.textContent = "Network error. Connection dropped.";
   }
   stream.scrollTop = stream.scrollHeight;
 }
+
+// Bind event listeners natively to ensure execution context safety
+document.getElementById('chat-toggle-btn').addEventListener('click', togglePexiChat);
+document.getElementById('chat-close-btn').addEventListener('click', togglePexiChat);
+document.getElementById('chat-send-btn').addEventListener('click', sendChatMessage);
+document.getElementById('chat-input-field').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendChatMessage();
+});
 
 // ─── INITIALIZE DYNAMIC SCRIPT ATTACHMENTS ──────────────────────────────────
 window.onload = function () {
@@ -699,7 +696,7 @@ window.onload = function () {
 const pdfjsLib = window['pdfjs-dist/build/pdf'];
 if (pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-// ─── APPLICATION FILE AND RENDERING CONFIGS ──────────────────────────────────
+// ─── GLOBAL CONTROL AND ARRAY STRUCTURES ─────────────────────────────────────
 let images = [];
 let dragSrc = null;
 let currentMediaStream = null;
@@ -1064,7 +1061,7 @@ async function generatePDF() {
     document.getElementById('res-name').textContent = fileName; document.getElementById('res-size').textContent = `${sizeMB} · ${targetImages.length} page(s)`;
     const dlBtn = document.getElementById('dl-btn'); dlBtn.href = url; dlBtn.download = fileName;
     result.style.display = 'flex'; progLabel.textContent = '✅ Done!'; showToast('🎉 PDF ready!'); saveSettings();
-  } catch(err) { progLabel.textContent = '❌ Error'; showToast('Error generating PDF'); } finally { genBtn.disabled = false; }
+  } catch(err) { console.error(err); progLabel.textContent = '❌ Error'; showToast('Error generating PDF'); } finally { genBtn.disabled = false; }
 }
 
 function getImageData(url, quality, rotation, filterMode) {
