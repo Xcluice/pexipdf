@@ -7,7 +7,6 @@
 <meta name="description" content="Convert JPG, PNG, and WEBP images or existing documents into compressed PDFs instantly. 100% offline, private, and free with integrated text note OCR scanner.">
 <link rel="icon" type="image/png" href="/favicon.png">
 
-<!-- Google Search Site Name Verification Layout -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -17,7 +16,6 @@
 }
 </script>
 
-<!-- CSS External Libraries -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
 
 <style>
@@ -264,9 +262,7 @@
   #toast.show { transform:translateX(-50%) translateY(0); }
 </style>
 
-<!-- Google Identity Authentication Script Framework -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<!-- External Web Processing Core Modules -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -293,7 +289,6 @@
     </div>
   </header>
 
-  <!-- Login Banner Notification Box -->
   <div id="signin-prompt">
     <span class="prompt-text">👋 Sign in to save your core custom settings & document preferences!</span>
     <button id="close-prompt" title="Dismiss">✕</button>
@@ -428,7 +423,6 @@
 
 </div>
 
-<!-- Camera Frame modal -->
 <div id="camera-modal" class="modal-overlay">
   <video id="video-stream" autoplay playsinline></video>
   <div id="cam-flash"></div>
@@ -439,7 +433,6 @@
   </div>
 </div>
 
-<!-- Text/OCR entry note modal -->
 <div id="text-modal" class="modal-overlay">
   <div class="modal-box" style="max-width:600px;">
     <h2>Text Note / OCR</h2>
@@ -492,7 +485,6 @@
   </div>
 </div>
 
-<!-- Image Crop Adjustment Modal -->
 <div id="crop-modal" class="modal-overlay">
   <div class="modal-box" style="max-width:800px;">
     <h2>Crop Image</h2>
@@ -504,7 +496,6 @@
   </div>
 </div>
 
-<!-- Document naming structural modal -->
 <div id="name-modal" class="modal-overlay">
   <div class="modal-box">
     <h2>Name your PDF</h2>
@@ -516,7 +507,6 @@
   </div>
 </div>
 
-<!-- Zoom Lightbox Viewer Panel -->
 <div id="lightbox">
   <button id="lightbox-close">✕</button>
   <img id="lightbox-img" src="" alt="Preview">
@@ -527,13 +517,12 @@
   </div>
 </div>
 
-<!-- Chatbot Panel Container -->
 <div id="pexi-chat-wrapper" style="position: fixed; bottom: 24px; right: 24px; z-index: 1000; font-family: 'Inter', sans-serif;">
   <button id="chat-toggle-btn" style="width: 5px; height: 5px; border-radius: 50%; background: var(--accent); color: white; border: none; cursor: pointer; box-shadow: var(--shadow-md); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: transform 0.2s; padding: 28px;">
     💬
   </button>
   <div id="pexi-chat-window" style="display: none; width: 340px; height: 450px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-md); flex-direction: column; position: absolute; bottom: 70px; right: 0; overflow: hidden; animation: fadeInDown 0.3s ease;">
-    <div style="background: var(--accent); color: white; padding: 14px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="background: var(--accent); color: white; padding: 12px; display: flex; align-items: center; justify-content: space-between;">
       <div style="display: flex; align-items: center; gap: 8px;">
         <span style="font-size: 18px;">🤖</span>
         <div>
@@ -541,11 +530,17 @@
           <div style="font-size: 10px; opacity: 0.8;">Online Support</div>
         </div>
       </div>
-      <button id="chat-close-btn" style="background: none; border: none; color: white; cursor: pointer; font-size: 16px;">✕</button>
+      <div style="display: flex; gap: 6px; align-items: center;">
+        <button id="chat-pdf-extract-btn" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s;">📄 PDF to Text</button>
+        <button id="chat-close-btn" style="background: none; border: none; color: white; cursor: pointer; font-size: 16px; padding: 2px;">✕</button>
+      </div>
     </div>
+    
+    <input type="file" id="chat-pdf-extractor-input" accept="application/pdf" style="display:none;">
+
     <div id="chat-message-stream" style="flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: var(--bg);">
       <div style="background: var(--surface); color: var(--text); padding: 8px 12px; border-radius: 12px 12px 12px 4px; max-width: 85%; align-self: flex-start; font-size: 13px; border: 1px solid var(--border);">
-        Hi! I am your Pexi PDF helper. How can I help you manage your documents today?
+        Hi! I am your Pexi PDF helper. I can convert text straight into dynamic document layouts if you ask me to layout text pages, or extract content directly via the PDF tool option!
       </div>
     </div>
     <div style="padding: 10px; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 8px;">
@@ -615,12 +610,15 @@ document.getElementById('close-prompt').addEventListener('click', () => {
   signinPrompt.style.display = 'none';
 });
 
-// ─── OPENROUTER AI CHATBOT SYSTEM ENGINE ─────────────────────────────────────
+// ─── OPENROUTER AI CHATBOT SYSTEM ENGINE WITH SYSTEM SKILLS ───────────────────
 const OPENROUTER_API_KEY = "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";
-const CHAT_MODEL = "openrouter/free"; // Connects dynamically to the best available free instance to maximize stability
+const CHAT_MODEL = "openrouter/free"; 
 
 let chatHistory = [
-  { role: "system", content: "You are Pexi Assistant, an integrated helpful AI helper for PexiPDF. PexiPDF is an instant, privacy-focused application that allows compiling, merging, cropping, splitting, scanning, or compressing documents locally. Keep your answers brief, friendly, scannable, and focused on assisting the user." }
+  { 
+    role: "system", 
+    content: "You are Pexi Assistant, an integrated helpful AI helper for PexiPDF. PexiPDF is an instant application that compiles images and text notes locally into PDFs. You possess a special action function tool skill: if the user explicitly asks you to generate text to a PDF page, draft a structural layout document, or generate long written pages, compose the requested letter, essay, or structure clearly. Then, wrap your final document content output string strictly inside tags formatted exactly like this: [RENDER_PDF_START] Your composed note content here [RENDER_PDF_END]. Do not include titles inside the tags. Keep your general conversational answers short, scannable, and helpful." 
+  }
 ];
 
 function togglePexiChat() {
@@ -657,8 +655,8 @@ async function sendChatMessage() {
   stream.appendChild(botBubble);
   stream.scrollTop = stream.scrollHeight;
 
-  try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  async function fetchReply(modelName) {
+    return await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
@@ -666,13 +664,32 @@ async function sendChatMessage() {
         "X-Title": "PexiPDF",
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ model: CHAT_MODEL, messages: chatHistory })
+      body: JSON.stringify({ model: modelName, messages: chatHistory })
     });
+  }
 
-    const data = await response.json();
+  try {
+    let response = await fetchReply(CHAT_MODEL);
+    let data = await response.json();
+
     botBubble.style.opacity = "1";
     if (data.choices && data.choices[0].message) {
-      const replyText = data.choices[0].message.content;
+      let replyText = data.choices[0].message.content;
+      
+      // Parse out automated text-to-pdf page generator strings
+      if (replyText.includes('[RENDER_PDF_START]')) {
+        const startIdx = replyText.indexOf('[RENDER_PDF_START]');
+        const endIdx = replyText.indexOf('[RENDER_PDF_END]');
+        if (endIdx > startIdx) {
+          const extractedDocText = replyText.substring(startIdx + 18, endIdx).trim();
+          // Strips operational wrapper tags from display visibility context
+          replyText = replyText.replace(/\[RENDER_PDF_START\][\s\S]*?\[RENDER_PDF_END\]/, "📝 *I've processed that document text and automatically added it as a printable canvas note layout to your workspace pages grid!*");
+          
+          // Triggers localized canvas construction processing sequence instantly
+          injectAIGeneratedTextPage(extractedDocText);
+        }
+      }
+
       botBubble.textContent = replyText;
       chatHistory.push({ role: "assistant", content: replyText });
     } else {
@@ -684,6 +701,93 @@ async function sendChatMessage() {
   }
   stream.scrollTop = stream.scrollHeight;
 }
+
+// ─── CHATBOT AUTOMATED TEXT TO PDF PAGE CONVERTER ────────────────────────────
+function injectAIGeneratedTextPage(text) {
+  const tc = document.createElement('canvas'); 
+  tc.width = 794; tc.height = 1123;
+  const ctx = tc.getContext('2d');
+
+  ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, tc.width, tc.height);
+  const mx = 70, maxW = tc.width - mx * 2; let y = 90;
+  ctx.textBaseline = 'top';
+  ctx.font = "400 14px Inter, Arial, sans-serif";
+  ctx.fillStyle = '#1A1714';
+  const lh = 24;
+
+  const lines = text.split('\n');
+  lines.forEach(rawLine => {
+    if (!rawLine.trim()) { y += lh * 0.6; return; }
+    const words = rawLine.split(' '); let line = '';
+    words.forEach(word => {
+      const test = line ? line + ' ' + word : word;
+      if (ctx.measureText(test).width > maxW && line) {
+        ctx.fillText(line, mx, y); y += lh; line = word;
+      } else { line = test; }
+    });
+    if (line) { ctx.fillText(line, mx, y); y += lh; }
+  });
+
+  tc.toBlob(blob => {
+    images.push({ file: blob, url: URL.createObjectURL(blob), name: 'ai_doc_' + Date.now() + '.png', size: blob.size, rotation: 0, selected: false });
+    renderGrid();
+    showToast('🤖 Assistant injected document page');
+  }, 'image/png');
+}
+
+// ─── CHATBOT PDF TO TEXT PARSING EXTRACTOR SKILL ─────────────────────────────
+const chatPdfExtractBtn = document.getElementById('chat-pdf-extract-btn');
+const chatPdfExtractorInput = document.getElementById('chat-pdf-extractor-input');
+
+chatPdfExtractBtn.addEventListener('click', () => chatPdfExtractorInput.click());
+
+chatPdfExtractorInput.addEventListener('change', async () => {
+  const file = chatPdfExtractorInput.files[0];
+  if (!file) return;
+  chatPdfExtractorInput.value = ''; // clear receiver target
+  
+  const stream = document.getElementById('chat-message-stream');
+  
+  // Render user select confirmation inside window layout logs
+  const userFileBubble = document.createElement('div');
+  userFileBubble.style.cssText = "background: var(--accent); color: white; padding: 8px 12px; border-radius: 12px 12px 4px 12px; max-width: 85%; align-self: flex-end; font-size: 13px;";
+  userFileBubble.textContent = `📄 Extracting text from: ${file.name}`;
+  stream.appendChild(userFileBubble);
+  stream.scrollTop = stream.scrollHeight;
+
+  const botLoadingBubble = document.createElement('div');
+  botLoadingBubble.style.cssText = "background: var(--surface); color: var(--text); padding: 8px 12px; border-radius: 12px 12px 12px 4px; max-width: 85%; align-self: flex-start; font-size: 13px; border: 1px solid var(--border); opacity: 0.7;";
+  botLoadingBubble.textContent = "Reading PDF data streams...";
+  stream.appendChild(botLoadingBubble);
+  stream.scrollTop = stream.scrollHeight;
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+    let extractedFullText = "";
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContext = await page.getTextContent();
+      const pageText = textContext.items.map(item => item.str).join(" ");
+      extractedFullText += `--- Page ${i} ---\n${pageText}\n\n`;
+    }
+
+    botLoadingBubble.style.opacity = "1";
+    if (extractedFullText.trim().length === 0 || extractedFullText.replace(/Page \d/g, '').trim().length === 0) {
+      botLoadingBubble.textContent = "⚠️ Extraction concluded, but no raw machine-readable text vectors were found. This PDF might consist entirely of flattened scanner photo images.";
+    } else {
+      botLoadingBubble.style.whiteSpace = "pre-wrap";
+      botLoadingBubble.style.fontFamily = "monospace";
+      botLoadingBubble.style.fontSize = "11px";
+      botLoadingBubble.textContent = `📋 Extracted Document Text:\n\n${extractedFullText}`;
+    }
+  } catch(err) {
+    botLoadingBubble.style.opacity = "1";
+    botLoadingBubble.textContent = "❌ System failed to parse text streams from this specific PDF file.";
+  }
+  stream.scrollTop = stream.scrollHeight;
+});
 
 // Bind event listeners natively to ensure execution context safety
 document.getElementById('chat-toggle-btn').addEventListener('click', togglePexiChat);
@@ -934,14 +1038,6 @@ function openCropModal(idx) {
   cropTargetIdx = idx; cropImage.src = images[idx].url; cropModal.style.display = 'flex';
   if(cropper) cropper.destroy();
   cropper = new Cropper(cropImage, { viewMode: 1, autoCropArea: 0.9, background: false });
-}
-
-async function runOCR(idx) {
-  showToast('🔍 Scanning text... (may take a moment)');
-  try {
-    const result = await Tesseract.recognize(images[idx].url, 'eng');
-    openTextModal(); document.getElementById('text-input-area').value = result.data.text; document.getElementById('note-title').value = "Scanned Text"; showToast('✅ Text extracted!');
-  } catch(e) { showToast('❌ OCR failed.'); }
 }
 
 // ─── DASHBOARD RENDERING PIPELINE ────────────────────────────────────────────
