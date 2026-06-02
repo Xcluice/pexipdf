@@ -7,11 +7,9 @@
 <meta name="description" content="Convert JPG, PNG, and WEBP images or existing documents into compressed PDFs instantly. 100% offline, private, and free with integrated text note OCR scanner.">
 <link rel="icon" type="image/png" href="/favicon.png">
 
-<!-- Google AdSense Verification & Script -->
 <meta name="google-adsense-account" content="ca-pub-2113818007207496">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2113818007207496" crossorigin="anonymous"></script>
 
-<!-- Google Search Site Name Verification Layout -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -21,7 +19,6 @@
 }
 </script>
 
-<!-- CSS External Libraries -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
 
 <style>
@@ -217,7 +214,7 @@
   #empty p { font-size:12px;line-height:1.6; }
   .divider { height:1px;background:var(--border);margin:24px 0; width:100%; }
 
-  /* OVERLAY MODALS STYLING (RESTORED FIX) */
+  /* OVERLAY MODALS STYLING */
   .modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px); }
   #video-stream { flex:1;width:100%;max-height:calc(100vh - 120px);object-fit:cover;background:#111;border-radius:14px; }
   .cam-controls { height:100px;width:100%;display:flex;align-items:center;justify-content:space-around;margin-top:12px; }
@@ -275,9 +272,7 @@
   .action-btn:active { transform:scale(0.96); }
 </style>
 
-<!-- Google Identity Authentication Script Framework -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<!-- External Web Processing Core Modules -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -304,7 +299,6 @@
     </div>
   </header>
 
-  <!-- Login Banner Notification Box -->
   <div id="signin-prompt">
     <span class="prompt-text">👋 Sign in to save your core custom settings & document preferences!</span>
     <button id="close-prompt" title="Dismiss">✕</button>
@@ -439,7 +433,6 @@
 
 </div>
 
-<!-- Camera Frame modal -->
 <div id="camera-modal" class="modal-overlay">
   <video id="video-stream" autoplay playsinline></video>
   <div id="cam-flash"></div>
@@ -450,7 +443,6 @@
   </div>
 </div>
 
-<!-- Text/OCR entry note modal -->
 <div id="text-modal" class="modal-overlay">
   <div class="modal-box" style="max-width:600px;">
     <h2>Text Note / OCR</h2>
@@ -503,7 +495,6 @@
   </div>
 </div>
 
-<!-- Image Crop Adjustment Modal -->
 <div id="crop-modal" class="modal-overlay">
   <div class="modal-box" style="max-width:800px;">
     <h2>Crop Image</h2>
@@ -515,7 +506,6 @@
   </div>
 </div>
 
-<!-- Document naming structural modal -->
 <div id="name-modal" class="modal-overlay">
   <div class="modal-box">
     <h2>Name your PDF</h2>
@@ -527,7 +517,6 @@
   </div>
 </div>
 
-<!-- Zoom Lightbox Viewer Panel -->
 <div id="lightbox">
   <button id="lightbox-close">✕</button>
   <img id="lightbox-img" src="" alt="Preview">
@@ -538,7 +527,6 @@
   </div>
 </div>
 
-<!-- Chatbot Panel Container -->
 <div id="pexi-chat-wrapper" style="position: fixed; bottom: 24px; right: 24px; z-index: 1000; font-family: 'Inter', sans-serif;">
   <button id="chat-toggle-btn" style="width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: white; border: none; cursor: pointer; box-shadow: var(--shadow-md); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: transform 0.2s;">
     💬
@@ -944,23 +932,22 @@ async function processPdf(file) {
   } catch(err) { showToast(`Failed to read PDF: ${file.name}`); }
 }
 
-// ─── HARDWARE CAMERA MODULES ──────────────────────────────────────────────────
-const camModal = document.getElementById('camera-modal');
-const videoStream = document.getElementById('video-stream');
-const camCounter = document.getElementById('cam-counter');
-const hiddenCanvas = document.getElementById('hidden-canvas');
-const hiddenCtx = hiddenCanvas.getContext('2d');
-
+// ─── ORIGINAL SPEC HARDWARE CAMERA REVERSION ─────────────────────────────────
 document.getElementById('btn-camera').addEventListener('click', async () => {
   try {
-    currentMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } });
+    // Restored back cleanly to your high-performance initial setup constraints rules
+    currentMediaStream = await navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } 
+    });
     videoStream.srcObject = currentMediaStream; camModal.style.display = 'flex'; camCounter.textContent = images.length;
   } catch(err) { showToast('Camera unavailable'); }
 });
+
 document.getElementById('cam-close-btn').addEventListener('click', () => {
   if (currentMediaStream) currentMediaStream.getTracks().forEach(t => t.stop());
   camModal.style.display = 'none'; renderGrid();
 });
+
 document.getElementById('cam-snap-btn').addEventListener('click', () => {
   if (!videoStream.videoWidth) return;
   document.getElementById('cam-flash').style.opacity = '1'; setTimeout(() => document.getElementById('cam-flash').style.opacity = '0', 100);
@@ -969,7 +956,7 @@ document.getElementById('cam-snap-btn').addEventListener('click', () => {
   hiddenCanvas.toBlob(blob => {
     images.push({ file: blob, url: URL.createObjectURL(blob), name: 'photo_' + Date.now() + '.jpg', size: blob.size, rotation: 0, selected: false });
     camCounter.textContent = images.length; showToast('📸 Photo captured');
-  }, 'image/jpeg', 0.92);
+  }, 'image/jpeg', 0.92); // Restored original high-fidelity 0.92 layout snapshot quality
 });
 
 // ─── TEXT NOTE CONVERT ENGINE ────────────────────────────────────────────────
@@ -1058,14 +1045,6 @@ function openCropModal(idx) {
   cropTargetIdx = idx; cropImage.src = images[idx].url; cropModal.style.display = 'flex';
   if(cropper) cropper.destroy();
   cropper = new Cropper(cropImage, { viewMode: 1, autoCropArea: 0.9, background: false });
-}
-
-async function runOCR(idx) {
-  showToast('🔍 Scanning text... (may take a moment)');
-  try {
-    const result = await Tesseract.recognize(images[idx].url, 'eng');
-    openTextModal(); document.getElementById('text-input-area').value = result.data.text; document.getElementById('note-title').value = "Scanned Text"; showToast('✅ Text extracted!');
-  } catch(e) { showToast('❌ OCR failed.'); }
 }
 
 // ─── DASHBOARD RENDERING PIPELINE ────────────────────────────────────────────
@@ -1204,10 +1183,19 @@ function getImageData(url, quality, rotation, filterMode) {
     const img = new Image();
     img.onload = () => {
       let w = img.naturalWidth, h = img.naturalHeight;
+      
+      // SIZE OPTIMIZATION: Downsizer logic constraints grid boundaries to fix file array bloating
+      const maxDim = 1600;
+      if ((w > maxDim || h > maxDim) && document.getElementById('compress').checked) {
+        const scale = Math.min(maxDim / w, maxDim / h);
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+      }
+
       const rad = rotation * Math.PI / 180; const rotated = rotation === 90 || rotation === 270;
       const cw = rotated ? h : w; const ch = rotated ? w : h;
       const c = document.createElement('canvas'); c.width = cw; c.height = ch; const ctx = c.getContext('2d');
-      ctx.translate(cw/2, ch/2); ctx.rotate(rad); ctx.drawImage(img, -w/2, -h/2); ctx.setTransform(1,0,0,1,0,0);
+      ctx.translate(cw/2, ch/2); ctx.rotate(rad); ctx.drawImage(img, -w/2, -h/2, img.naturalWidth, img.naturalHeight); ctx.setTransform(1,0,0,1,0,0);
       
       if (filterMode === 'gray' || filterMode === 'bw') {
         const id = ctx.getImageData(0, 0, cw, ch); const d = id.data;
