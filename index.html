@@ -829,6 +829,13 @@ let lightboxIdx = 0;
 let cropper = null;
 let cropTargetIdx = null;
 
+// Restored missing global variable elements for camera framework connectivity mapping
+const camModal = document.getElementById('camera-modal');
+const videoStream = document.getElementById('video-stream');
+const camCounter = document.getElementById('cam-counter');
+const hiddenCanvas = document.getElementById('hidden-canvas');
+const hiddenCtx = hiddenCanvas.getContext('2d');
+
 const themeToggle = document.getElementById('theme-toggle');
 function setTheme(isDark) {
   if (isDark) { document.documentElement.classList.add('dark'); themeToggle.textContent = '☀'; } 
@@ -929,13 +936,12 @@ async function processPdf(file) {
       }, 'image/jpeg', 0.95);
     }
     showToast(`✅ Extracted ${pdf.numPages} pages from PDF`);
-  } catch(err) { showToast(`Failed to read PDF: ${file.name}`); }
+  } catch(err) { showToast('Failed to read PDF: ' + file.name); }
 }
 
 // ─── ORIGINAL SPEC HARDWARE CAMERA REVERSION ─────────────────────────────────
 document.getElementById('btn-camera').addEventListener('click', async () => {
   try {
-    // Restored back cleanly to your high-performance initial setup constraints rules
     currentMediaStream = await navigator.mediaDevices.getUserMedia({ 
       video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } 
     });
@@ -956,7 +962,7 @@ document.getElementById('cam-snap-btn').addEventListener('click', () => {
   hiddenCanvas.toBlob(blob => {
     images.push({ file: blob, url: URL.createObjectURL(blob), name: 'photo_' + Date.now() + '.jpg', size: blob.size, rotation: 0, selected: false });
     camCounter.textContent = images.length; showToast('📸 Photo captured');
-  }, 'image/jpeg', 0.92); // Restored original high-fidelity 0.92 layout snapshot quality
+  }, 'image/jpeg', 0.92);
 });
 
 // ─── TEXT NOTE CONVERT ENGINE ────────────────────────────────────────────────
@@ -1184,7 +1190,6 @@ function getImageData(url, quality, rotation, filterMode) {
     img.onload = () => {
       let w = img.naturalWidth, h = img.naturalHeight;
       
-      // SIZE OPTIMIZATION: Downsizer logic constraints grid boundaries to fix file array bloating
       const maxDim = 1600;
       if ((w > maxDim || h > maxDim) && document.getElementById('compress').checked) {
         const scale = Math.min(maxDim / w, maxDim / h);
