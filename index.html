@@ -1200,7 +1200,12 @@ function getImageData(url, quality, rotation, filterMode) {
       const rad = rotation * Math.PI / 180; const rotated = rotation === 90 || rotation === 270;
       const cw = rotated ? h : w; const ch = rotated ? w : h;
       const c = document.createElement('canvas'); c.width = cw; c.height = ch; const ctx = c.getContext('2d');
-      ctx.translate(cw/2, ch/2); ctx.rotate(rad); ctx.drawImage(img, -w/2, -h/2, img.naturalWidth, img.naturalHeight); ctx.setTransform(1,0,0,1,0,0);
+      ctx.translate(cw/2, ch/2); ctx.rotate(rad); 
+      
+      // FIX: Use 'w' and 'h' instead of img.naturalWidth and img.naturalHeight
+      ctx.drawImage(img, -w/2, -h/2, w, h); 
+      
+      ctx.setTransform(1,0,0,1,0,0);
       
       if (filterMode === 'gray' || filterMode === 'bw') {
         const id = ctx.getImageData(0, 0, cw, ch); const d = id.data;
