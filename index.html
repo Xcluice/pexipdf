@@ -319,7 +319,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+<script src="/vendor/ffmpeg/ffmpeg.min.js"></script>
 
 </head>
 <body>
@@ -776,7 +776,7 @@ function loadSettings() {
     if (s.margins) document.getElementById('margins').value = s.margins;
     if (s.filter) document.getElementById('img-filter').value = s.filter;
     if (s.compress !== undefined) document.getElementById('compress').checked = s.compress;
-    if (localStorage.getItem('pexipdf_theme') === 'dark') setTheme(true);
+    if (localStorage.getItem('pexipdf_theme') === 'light') setTheme(false); else setTheme(true);
   } catch(e) {}
 }
 function saveSettings() {
@@ -1390,7 +1390,7 @@ async function getFFmpeg(onStatus) {
   if (!window.FFmpeg) throw new Error('FFmpeg engine failed to load');
   const { createFFmpeg } = window.FFmpeg;
   ffmpegInstance = createFFmpeg({
-    corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
+    corePath: '/vendor/ffmpeg-core/ffmpeg-core.js',
     log: false
   });
   if (onStatus) onStatus('Downloading compression engine (first time only)…');
