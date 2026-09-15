@@ -265,6 +265,9 @@
   #compress-drop { background:var(--surface-sunken); border:1.5px dashed var(--border); border-radius:14px; padding:26px 18px; text-align:center; cursor:pointer; transition: border-color 0.2s, background 0.2s; position:relative; }
   #compress-drop:hover, #compress-drop.hover { border-color:var(--accent); background: var(--accent-light); }
   #compress-drop input { position:absolute; inset:0; opacity:0; cursor:pointer; }
+  #compress-video-drop { background:var(--surface-sunken); border:1.5px dashed var(--border); border-radius:14px; padding:26px 18px; text-align:center; cursor:pointer; transition: border-color 0.2s, background 0.2s; position:relative; }
+  #compress-video-drop:hover, #compress-video-drop.hover { border-color:var(--accent); background: var(--accent-light); }
+  #compress-video-drop input { position:absolute; inset:0; opacity:0; cursor:pointer; }
   .compress-file-row { display:flex; align-items:center; gap:12px; background:var(--surface-sunken); border:1.5px solid var(--border); border-radius:12px; padding:12px 14px; }
   .compress-file-icon { font-size:22px; }
   .compress-file-info { flex:1; min-width:0; }
@@ -316,6 +319,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 
 </head>
 <body>
@@ -358,6 +362,16 @@
       <span style="text-align: left;">
         <span class="text" style="display:block;">Compress an existing PDF</span>
         <span style="display:block; font-size: 11px; color: var(--muted); font-weight: 400;">Shrink file size while keeping it readable</span>
+      </span>
+    </button>
+  </div>
+
+  <div class="input-row" style="grid-template-columns: 1fr; margin-bottom: 24px;">
+    <button class="action-btn" id="btn-compress-video" style="flex-direction: row; gap: 12px; padding: 16px 18px;">
+      <span class="icon" style="font-size: 22px;">🎬</span>
+      <span style="text-align: left;">
+        <span class="text" style="display:block;">Compress a video</span>
+        <span style="display:block; font-size: 11px; color: var(--muted); font-weight: 400;">Shrink file size with no visible quality loss</span>
       </span>
     </button>
   </div>
@@ -632,6 +646,85 @@
 
     <div class="modal-actions">
       <button class="btn-cancel" id="compress-close-btn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="compress-video-modal" class="modal-overlay">
+  <div class="modal-box" style="max-width:520px;">
+    <h2>Compress Video</h2>
+    <div class="modal-sub">Shrink an existing video's file size, right here in your browser — no visible quality loss.</div>
+
+    <div id="compress-video-empty-state">
+      <div id="compress-video-drop">
+        <input type="file" id="compress-video-file-input" accept="video/*">
+        <div class="drop-icon" style="font-size:26px;">🎬</div>
+        <div class="drop-title">Drop a video here or browse</div>
+        <div class="drop-sub">Works fully offline · nothing leaves your device</div>
+      </div>
+    </div>
+
+    <div id="compress-video-file-state" style="display:none; flex-direction:column; gap:16px;">
+      <div class="compress-file-row">
+        <span class="compress-file-icon">🎥</span>
+        <div class="compress-file-info">
+          <div class="compress-file-name" id="compress-video-file-name">video.mp4</div>
+          <div class="compress-file-size" id="compress-video-file-size">0 KB</div>
+        </div>
+        <button class="compress-remove" id="compress-video-remove-btn" title="Remove">✕</button>
+      </div>
+
+      <div>
+        <div class="setting-label" style="margin-bottom:10px;">Compression level</div>
+        <div class="compress-level-row">
+          <div class="compress-level-btn compress-video-level-btn" data-level="light">
+            <div class="lvl-name">Light</div>
+            <div class="lvl-desc">Visually lossless</div>
+          </div>
+          <div class="compress-level-btn compress-video-level-btn active" data-level="balanced">
+            <div class="lvl-name">Balanced</div>
+            <div class="lvl-desc">Big savings</div>
+          </div>
+          <div class="compress-level-btn compress-video-level-btn" data-level="strong">
+            <div class="lvl-name">Strong</div>
+            <div class="lvl-desc">Smallest size</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size:11px;color:var(--muted);line-height:1.5;">First run downloads a small compression engine (~25&nbsp;MB, cached after that). Keeps original resolution &amp; frame rate — only re-encodes more efficiently.</div>
+
+      <button class="btn-primary" id="compress-video-run-btn" style="padding:12px;font-size:14px;">🎬 Compress Video</button>
+
+      <div id="compress-video-progress" style="display:none;">
+        <div class="prog-track"><div id="compress-video-prog-bar" style="height:100%;background:linear-gradient(90deg, var(--accent), var(--accent-2));width:0%;border-radius:3px;transition:width 0.2s var(--ease);"></div></div>
+        <div id="compress-video-prog-label" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;">Compressing…</div>
+      </div>
+
+      <div class="compress-result" id="compress-video-result">
+        <div class="compress-result-stats">
+          <div class="compress-stat">
+            <div class="num" id="compress-video-before">0 MB</div>
+            <div class="lbl">Before</div>
+          </div>
+          <div class="compress-arrow">→</div>
+          <div class="compress-stat">
+            <div class="num" id="compress-video-after">0 MB</div>
+            <div class="lbl">After</div>
+          </div>
+          <div class="compress-stat saved">
+            <div class="num" id="compress-video-saved">0%</div>
+            <div class="lbl">Saved</div>
+          </div>
+        </div>
+        <div class="modal-actions" style="justify-content:stretch;">
+          <a id="compress-video-dl-btn" class="btn-primary" style="text-align:center; text-decoration:none; flex:1;">⬇ Download compressed video</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" id="compress-video-close-btn">Close</button>
     </div>
   </div>
 </div>
@@ -1218,6 +1311,164 @@ document.getElementById('compress-run-btn').addEventListener('click', async () =
     console.error(err);
     progLabel.textContent = '❌ Error compressing PDF';
     showToast('Could not compress this PDF');
+    runBtn.style.display = 'block';
+  } finally {
+    runBtn.disabled = false;
+  }
+});
+
+// ─── COMPRESS VIDEO FEATURE ────────────────────────────────────────────────────
+const compressVideoModal = document.getElementById('compress-video-modal');
+const compressVideoDrop = document.getElementById('compress-video-drop');
+const compressVideoFileInput = document.getElementById('compress-video-file-input');
+let compressVideoTargetFile = null;
+let compressVideoLevel = 'balanced';
+let compressedVideoBlob = null;
+let ffmpegInstance = null;
+
+function resetCompressVideoModal() {
+  compressVideoTargetFile = null;
+  compressedVideoBlob = null;
+  document.getElementById('compress-video-empty-state').style.display = 'block';
+  document.getElementById('compress-video-file-state').style.display = 'none';
+  document.getElementById('compress-video-progress').style.display = 'none';
+  document.getElementById('compress-video-result').style.display = 'none';
+  document.getElementById('compress-video-run-btn').style.display = 'block';
+  document.getElementById('compress-video-run-btn').disabled = false;
+  compressVideoFileInput.value = '';
+}
+
+document.getElementById('btn-compress-video').addEventListener('click', () => {
+  resetCompressVideoModal();
+  compressVideoModal.style.display = 'flex';
+});
+document.getElementById('compress-video-close-btn').addEventListener('click', () => { compressVideoModal.style.display = 'none'; });
+compressVideoModal.addEventListener('click', e => { if (e.target === compressVideoModal) compressVideoModal.style.display = 'none'; });
+
+compressVideoDrop.addEventListener('dragover', e => { e.preventDefault(); compressVideoDrop.classList.add('hover'); });
+compressVideoDrop.addEventListener('dragleave', () => compressVideoDrop.classList.remove('hover'));
+compressVideoDrop.addEventListener('drop', e => {
+  e.preventDefault(); compressVideoDrop.classList.remove('hover');
+  const file = [...e.dataTransfer.files].find(f => f.type.startsWith('video/'));
+  if (file) selectCompressVideoFile(file); else showToast('Please drop a video file');
+});
+compressVideoFileInput.addEventListener('change', () => {
+  if (compressVideoFileInput.files[0]) selectCompressVideoFile(compressVideoFileInput.files[0]);
+});
+
+function selectCompressVideoFile(file) {
+  compressVideoTargetFile = file;
+  document.getElementById('compress-video-empty-state').style.display = 'none';
+  document.getElementById('compress-video-file-state').style.display = 'flex';
+  document.getElementById('compress-video-file-name').textContent = file.name;
+  document.getElementById('compress-video-file-size').textContent = formatBytes(file.size);
+  document.getElementById('compress-video-progress').style.display = 'none';
+  document.getElementById('compress-video-result').style.display = 'none';
+  document.getElementById('compress-video-run-btn').style.display = 'block';
+}
+
+document.getElementById('compress-video-remove-btn').addEventListener('click', () => { resetCompressVideoModal(); });
+
+document.querySelectorAll('.compress-video-level-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.compress-video-level-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    compressVideoLevel = btn.dataset.level;
+  });
+});
+
+// CRF (constant rate factor) — lower = higher quality/bigger file. 18 is the generally accepted
+// "visually lossless" threshold for H.264; resolution & frame rate are always kept untouched.
+const VIDEO_COMPRESS_PROFILES = {
+  light:    { crf: 18, preset: 'veryfast' },
+  balanced: { crf: 23, preset: 'veryfast' },
+  strong:   { crf: 28, preset: 'veryfast' }
+};
+
+async function getFFmpeg(onStatus) {
+  if (ffmpegInstance) return ffmpegInstance;
+  if (!window.FFmpeg) throw new Error('FFmpeg engine failed to load');
+  const { createFFmpeg } = window.FFmpeg;
+  ffmpegInstance = createFFmpeg({
+    corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
+    log: false
+  });
+  if (onStatus) onStatus('Downloading compression engine (first time only)…');
+  await ffmpegInstance.load();
+  return ffmpegInstance;
+}
+
+document.getElementById('compress-video-run-btn').addEventListener('click', async () => {
+  if (!compressVideoTargetFile) return;
+  const runBtn = document.getElementById('compress-video-run-btn');
+  const progWrap = document.getElementById('compress-video-progress');
+  const progBar = document.getElementById('compress-video-prog-bar');
+  const progLabel = document.getElementById('compress-video-prog-label');
+  const resultBox = document.getElementById('compress-video-result');
+
+  runBtn.disabled = true; runBtn.style.display = 'none';
+  progWrap.style.display = 'block'; resultBox.style.display = 'none';
+  progBar.style.width = '2%'; progLabel.textContent = 'Preparing…';
+
+  try {
+    const profile = VIDEO_COMPRESS_PROFILES[compressVideoLevel];
+    const originalSize = compressVideoTargetFile.size;
+    const ffmpeg = await getFFmpeg(msg => { progLabel.textContent = msg; });
+
+    ffmpeg.setProgress(({ ratio }) => {
+      if (ratio >= 0 && ratio <= 1) {
+        progBar.style.width = Math.max(5, Math.round(ratio * 90)) + '%';
+        progLabel.textContent = `Compressing… ${Math.round(ratio * 100)}%`;
+      }
+    });
+
+    const inExt = (compressVideoTargetFile.name.match(/\.(\w+)$/) || [null, 'mp4'])[1];
+    const inName = 'input.' + inExt;
+    const outName = 'output.mp4';
+
+    progLabel.textContent = 'Loading video…';
+    const { fetchFile } = window.FFmpeg;
+    ffmpeg.FS('writeFile', inName, await fetchFile(compressVideoTargetFile));
+
+    await ffmpeg.run(
+      '-i', inName,
+      '-c:v', 'libx264', '-crf', String(profile.crf), '-preset', profile.preset,
+      '-c:a', 'aac', '-b:a', '128k',
+      '-movflags', '+faststart',
+      outName
+    );
+
+    progBar.style.width = '95%'; progLabel.textContent = 'Finalising…';
+    const data = ffmpeg.FS('readFile', outName);
+    const blob = new Blob([data.buffer], { type: 'video/mp4' });
+    try { ffmpeg.FS('unlink', inName); ffmpeg.FS('unlink', outName); } catch(e) {}
+
+    let finalBlob = blob;
+    if (blob.size >= originalSize) {
+      finalBlob = compressVideoTargetFile;
+      showToast('This video was already well optimized');
+    }
+    compressedVideoBlob = finalBlob;
+
+    const savedPct = Math.max(0, Math.round((1 - finalBlob.size / originalSize) * 100));
+    document.getElementById('compress-video-before').textContent = formatBytes(originalSize);
+    document.getElementById('compress-video-after').textContent = formatBytes(finalBlob.size);
+    document.getElementById('compress-video-saved').textContent = savedPct + '%';
+
+    const dlBtn = document.getElementById('compress-video-dl-btn');
+    const url = URL.createObjectURL(finalBlob);
+    const outNameFinal = compressVideoTargetFile.name.replace(/\.\w+$/i, '') + '_compressed.mp4';
+    dlBtn.href = url; dlBtn.download = outNameFinal;
+
+    progBar.style.width = '100%';
+    progWrap.style.display = 'none';
+    resultBox.style.display = 'flex';
+    runBtn.style.display = 'none';
+    showToast('🎬 Video compressed');
+  } catch (err) {
+    console.error(err);
+    progLabel.textContent = '❌ Error compressing video';
+    showToast('Could not compress this video');
     runBtn.style.display = 'block';
   } finally {
     runBtn.disabled = false;
