@@ -1467,8 +1467,9 @@ document.getElementById('compress-video-run-btn').addEventListener('click', asyn
     showToast('🎬 Video compressed');
   } catch (err) {
     console.error(err);
-    progLabel.textContent = '❌ Error compressing video';
-    showToast('Could not compress this video');
+    const detail = (err && err.message) ? err.message : String(err);
+    progLabel.textContent = '❌ ' + detail;
+    showToast('Compression failed: ' + detail);
     runBtn.style.display = 'block';
   } finally {
     runBtn.disabled = false;
