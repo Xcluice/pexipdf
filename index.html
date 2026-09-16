@@ -1390,7 +1390,7 @@ async function getFFmpeg(onStatus) {
   if (!window.FFmpeg) throw new Error('FFmpeg engine failed to load');
   const { createFFmpeg } = window.FFmpeg;
   ffmpegInstance = createFFmpeg({
-    corePath: '/vendor/ffmpeg-core/ffmpeg-core.js',
+    corePath: location.origin + '/vendor/ffmpeg-core/ffmpeg-core.js',
     log: false
   });
   if (onStatus) onStatus('Downloading compression engine (first time only)…');
