@@ -243,7 +243,7 @@
 
   .tb-title-row { display:flex;gap:8px; }
   .tb-title-input { flex:1;font-family:'Inter',sans-serif;font-size:14px;font-weight:600; }
-  #text-input-area { width:100%;height:220px;background:var(--surface-sunken);color:var(--text);border:1.5px solid var(--border);border-radius:12px;padding:14px;font-family:'Inter',sans-serif;font-size:14px;resize:none;outline:none;transition:border-color 0.15s; }
+  #text-input-area { width:100%;height:220px;background:var(--surface-sunken);color:var(--text);border:1.5px solid var(--border);border-radius:12px;padding:14px;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;min-height:140px;max-height:50vh;outline:none;transition:border-color 0.15s, background .2s, color .2s; line-height:1.5; }
   #text-input-area:focus { border-color:var(--accent-2); }
   .modal-name-input { width:100%;background:var(--surface-sunken);border:1.5px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-family:'Inter',sans-serif;font-size:14px;outline:none;transition:border-color 0.15s; }
   .modal-name-input:focus { border-color:var(--accent-2); }
@@ -723,13 +723,16 @@
           <option value="18">18px</option>
           <option value="22">22px</option>
           <option value="28">28px</option>
+          <option value="36">36px</option>
         </select>
       </div>
       <div class="tb-group">
         <select id="note-font" title="Font">
           <option value="Inter, Arial, sans-serif">Sans-serif</option>
-          <option value="'Georgia', serif">Serif</option>
+          <option value="Georgia, 'Times New Roman', serif">Serif</option>
+          <option value="Fraunces, Georgia, serif">Elegant</option>
           <option value="'Courier New', monospace">Mono</option>
+          <option value="'Segoe Print', 'Comic Sans MS', cursive">Handwritten</option>
         </select>
       </div>
       <div class="tb-divider"></div>
@@ -740,21 +743,18 @@
       </div>
       <div class="tb-divider"></div>
       <div class="tb-group">
-        <button class="tb-btn" id="tb-left" title="Left">≡</button>
-        <button class="tb-btn active" id="tb-center" title="Center">☰</button>
-        <button class="tb-btn" id="tb-right" title="Right">≡</button>
+        <button class="tb-btn" id="tb-left" title="Left"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 3h12M1 7h8M1 11h10"/></svg></button>
+        <button class="tb-btn" id="tb-center" title="Center"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 3h12M3 7h8M2 11h10"/></svg></button>
+        <button class="tb-btn" id="tb-right" title="Right"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 3h12M5 7h8M3 11h10"/></svg></button>
       </div>
       <div class="tb-divider"></div>
-      <div class="tb-color-row">
-        <div class="tb-color active" data-color="#ffffff" style="background:#ffffff;" title="White"></div>
-        <div class="tb-color" data-color="#FFF9E6" style="background:#FFF9E6;" title="Yellow"></div>
-        <div class="tb-color" data-color="#F6E9CC" style="background:#F6E9CC;" title="Gold"></div>
-        <div class="tb-color" data-color="#EAF5EE" style="background:#EAF5EE;" title="Green"></div>
-      </div>
+      <div class="tb-color-row"><div class="tb-color" data-color="#ffffff" style="background:#ffffff;" title="White"></div><div class="tb-color" data-color="#FFF9E6" style="background:#FFF9E6;" title="Ruled cream"></div><div class="tb-color" data-color="#F6E9CC" style="background:#F6E9CC;" title="Ruled gold"></div><div class="tb-color" data-color="#EAF5EE" style="background:#EAF5EE;" title="Mint"></div><div class="tb-color" data-color="#FDE7F1" style="background:#FDE7F1;" title="Rose"></div><div class="tb-color" data-color="#E3F2FF" style="background:#E3F2FF;" title="Sky"></div><div class="tb-color" data-color="#EEE6FF" style="background:#EEE6FF;" title="Lavender"></div><div class="tb-color" data-color="#1E1633" style="background:#1E1633;" title="Midnight"></div></div>
     </div>
-    <textarea id="text-input-area" placeholder="Start typing your note here, or run OCR on an image to extract text…"></textarea>
+    <textarea id="text-input-area" placeholder="Start typing — Urdu/Kashmiri work too. Long notes flow onto new pages."></textarea>
+    <div id="note-meta" style="font-size:11px;color:var(--muted);margin-top:-8px;">Tip: long notes automatically flow onto extra pages</div>
     <div class="modal-actions">
-      <button class="btn-cancel" id="text-cancel-btn">Cancel</button>
+      <button class="btn-cancel" id="text-clear-btn" style="margin-right:auto;">Clear</button>
+      <button class="btn-cancel" id="text-cancel-btn">Close</button>
       <button class="btn-primary" id="text-save-btn">Add to PDF</button>
     </div>
   </div>
@@ -1127,73 +1127,159 @@ document.getElementById('cam-snap-btn').addEventListener('click', () => {
 // ─── TEXT NOTE CONVERT ENGINE ────────────────────────────────────────────────
 const textModal = document.getElementById('text-modal');
 const textArea = document.getElementById('text-input-area');
-let noteStyles = { bold: false, italic: false, underline: false, align: 'center', bg: '#ffffff' };
+let noteStyles = { bold: false, italic: false, underline: false, align: 'left', bg: '#ffffff' };
+const NOTE_RULED = ['#FFF9E6', '#F6E9CC'];
+const NOTE_DRAFT_KEY = 'pexipdf_note_draft';
+const isDarkBg = c => { const n = parseInt(c.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return (0.299 * r + 0.587 * g + 0.114 * b) < 110; };
+const inkOf = bg => isDarkBg(bg) ? '#F4EEFF' : '#2A2118';
+const isRTL = t => /[\u0590-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(t);
+const noteTitleEl = document.getElementById('note-title');
+const noteSizeEl = document.getElementById('note-font-size');
+const noteFontEl = document.getElementById('note-font');
+const noteSaveBtn = document.getElementById('text-save-btn');
 
-document.getElementById('btn-text').addEventListener('click', openTextModal);
-document.getElementById('text-cancel-btn').addEventListener('click', () => textModal.style.display = 'none');
-document.getElementById('text-save-btn').addEventListener('click', saveTextNote);
-document.getElementById('note-font-size').addEventListener('input', applyTextStyle);
-document.getElementById('note-font').addEventListener('input', applyTextStyle);
-
-['bold','italic','underline'].forEach(id => { document.getElementById('tb-' + id).addEventListener('click', () => { noteStyles[id] = !noteStyles[id]; document.getElementById('tb-' + id).classList.toggle('active', noteStyles[id]); applyTextStyle(); }); });
-['left','center','right'].forEach(align => { document.getElementById('tb-' + align).addEventListener('click', () => { noteStyles.align = align; ['left','center','right'].forEach(a => document.getElementById('tb-' + a).classList.toggle('active', a === align)); applyTextStyle(); }); });
-document.querySelectorAll('.tb-color').forEach(el => { el.addEventListener('click', () => { document.querySelectorAll('.tb-color').forEach(c => c.classList.remove('active')); el.classList.add('active'); noteStyles.bg = el.dataset.color; textArea.style.background = noteStyles.bg; }); });
-
+function syncToolbar() {
+  ['bold', 'italic', 'underline'].forEach(id => document.getElementById('tb-' + id).classList.toggle('active', !!noteStyles[id]));
+  ['left', 'center', 'right'].forEach(a => document.getElementById('tb-' + a).classList.toggle('active', noteStyles.align === a));
+  document.querySelectorAll('.tb-color').forEach(c => c.classList.toggle('active', c.dataset.color.toLowerCase() === (noteStyles.bg || '').toLowerCase()));
+}
 function applyTextStyle() {
-  textArea.style.fontSize = document.getElementById('note-font-size').value + 'px';
-  textArea.style.fontFamily = document.getElementById('note-font').value;
-  textArea.style.fontWeight = noteStyles.bold ? '700' : '400';
-  textArea.style.fontStyle = noteStyles.italic ? 'italic' : 'normal';
+  const ink = inkOf(noteStyles.bg);
+  textArea.style.fontSize = noteSizeEl.value + 'px'; textArea.style.fontFamily = noteFontEl.value;
+  textArea.style.fontWeight = noteStyles.bold ? '700' : '400'; textArea.style.fontStyle = noteStyles.italic ? 'italic' : 'normal';
   textArea.style.textDecoration = noteStyles.underline ? 'underline' : 'none';
-  textArea.style.textAlign = noteStyles.align; textArea.style.background = noteStyles.bg;
+  textArea.style.textAlign = noteStyles.align; textArea.style.background = noteStyles.bg; textArea.style.color = ink; textArea.style.caretColor = ink;
+  textArea.dir = 'auto';
+  noteTitleEl.style.background = noteStyles.bg; noteTitleEl.style.color = ink; noteTitleEl.style.caretColor = ink; noteTitleEl.dir = 'auto';
+  syncToolbar();
+}
+function saveDraft() {
+  try {
+    if (!textArea.value.trim() && !noteTitleEl.value.trim()) { localStorage.removeItem(NOTE_DRAFT_KEY); return; }
+    localStorage.setItem(NOTE_DRAFT_KEY, JSON.stringify({ title: noteTitleEl.value, text: textArea.value, st: noteStyles, size: noteSizeEl.value, font: noteFontEl.value }));
+  } catch (e) {}
 }
 function openTextModal() {
-  document.getElementById('note-title').value = ''; textArea.value = '';
-  noteStyles = { bold: false, italic: false, underline: false, align: 'center', bg: '#ffffff' };
-  ['bold','italic','underline','left','right'].forEach(id => document.getElementById('tb-' + id).classList.remove('active'));
-  document.getElementById('tb-center').classList.add('active');
-  document.querySelectorAll('.tb-color').forEach((c,i) => c.classList.toggle('active', i===0));
-  applyTextStyle(); textModal.style.display = 'flex'; setTimeout(() => textArea.focus(), 100);
-}
-function saveTextNote() {
-  const text = textArea.value.trim(); const title = document.getElementById('note-title').value.trim();
-  if (!text && !title) { textModal.style.display = 'none'; return; }
-  const fontSize = parseInt(document.getElementById('note-font-size').value); const fontFamily = document.getElementById('note-font').value;
-  const tc = document.createElement('canvas'); tc.width = 794; tc.height = 1123; const ctx = tc.getContext('2d');
-  ctx.fillStyle = noteStyles.bg; ctx.fillRect(0, 0, tc.width, tc.height);
-  if (noteStyles.bg === '#FFF9E6' || noteStyles.bg === '#F6E9CC') {
-    ctx.strokeStyle = 'rgba(180,140,60,0.25)'; ctx.lineWidth = 1;
-    for (let ly = 80; ly < tc.height; ly += 32) { ctx.beginPath(); ctx.moveTo(50, ly); ctx.lineTo(tc.width - 50, ly); ctx.stroke(); }
-    ctx.strokeStyle = 'rgba(180,90,60,0.2)'; ctx.beginPath(); ctx.moveTo(90, 0); ctx.lineTo(90, tc.height); ctx.stroke();
+  let d = null; try { d = JSON.parse(localStorage.getItem(NOTE_DRAFT_KEY) || 'null'); } catch (e) {}
+  if (d && (d.text || d.title)) {
+    noteTitleEl.value = d.title || ''; textArea.value = d.text || ''; noteStyles = Object.assign({ bold: false, italic: false, underline: false, align: 'left', bg: '#ffffff' }, d.st || {});
+    if (d.size) noteSizeEl.value = d.size; if (d.font) noteFontEl.value = d.font; showToast('📝 Draft restored');
+  } else {
+    noteTitleEl.value = ''; textArea.value = ''; noteStyles = { bold: false, italic: false, underline: false, align: 'left', bg: '#ffffff' };
   }
-  const mx = 70, maxW = tc.width - mx * 2; let y = 70; ctx.textBaseline = 'top';
+  applyTextStyle(); updateNoteMeta(); textModal.style.display = 'flex'; setTimeout(() => textArea.focus(), 100);
+}
+function closeTextModal() { saveDraft(); textModal.style.display = 'none'; }
+
+// Lay the note out into pages (shared by live counter and final render)
+function layoutNote(ctx, title, text, st, fs, fam, S) {
+  const W = 794 * S, H = 1123 * S, mx = 70 * S, my = 70 * S, maxW = W - 2 * mx, lh = Math.round(fs * 1.55 * S);
+  const ruled = NOTE_RULED.includes(st.bg), rtl = false;
+  const fnt = (size, bold) => `${st.italic && !bold ? 'italic ' : ''}${bold ? '700' : '400'} ${size}px ${fam}`;
+  const ax = st.align === 'center' ? W / 2 : st.align === 'right' ? W - mx : mx;
+  const pages = []; let cur, y;
+  const newPage = () => { cur = { items: [], ruledFrom: my }; pages.push(cur); y = my; };
+  newPage();
+  const wrap = (str, font, indent) => {
+    ctx.font = font; const lines = []; let line = '';
+    const push = w => {
+      const test = line ? line + ' ' + w : w; const lim = maxW - (lines.length ? 0 : indent);
+      if (ctx.measureText(test).width <= lim) { line = test; return; }
+      if (line) { lines.push(line); line = ''; }
+      if (ctx.measureText(w).width <= maxW) { line = w; return; }
+      let chunk = ''; for (const ch of Array.from(w)) { if (ctx.measureText(chunk + ch).width > maxW && chunk) { lines.push(chunk); chunk = ch; } else chunk += ch; } line = chunk;
+    };
+    str.split(/\s+/).filter(Boolean).forEach(push); if (line) lines.push(line); return lines;
+  };
   if (title) {
-    const titleSize = Math.min(fontSize + 8, 32); ctx.font = `700 ${titleSize}px ${fontFamily}`; ctx.fillStyle = '#2A2118';
-    ctx.textAlign = noteStyles.align === 'center' ? 'center' : noteStyles.align === 'right' ? 'right' : 'left';
-    const tx = noteStyles.align === 'center' ? tc.width/2 : noteStyles.align === 'right' ? tc.width - mx : mx;
-    ctx.fillText(title, tx, y); y += titleSize + 20;
-    ctx.strokeStyle = 'rgba(124,58,237,0.5)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(mx, y - 8); ctx.lineTo(tc.width - mx, y - 8); ctx.stroke(); y += 10;
+    const ts = Math.min(fs + 8, 32) * S, tl = Math.round(ts * 1.3);
+    wrap(title, fnt(ts, true), 0).forEach(t => { cur.items.push({ t, x: ax, y, font: fnt(ts, true), size: ts, title: true, rtl: isRTL(t) }); y += tl; });
+    cur.items.push({ rule: true, y: y + 2 * S }); y += 22 * S; if (ruled) cur.ruledFrom = y;
   }
-  const weight = noteStyles.bold ? '700' : '400'; const style = noteStyles.italic ? 'italic ' : '';
-  ctx.font = `${style}${weight} ${fontSize}px ${fontFamily}`; ctx.fillStyle = '#2A2118';
-  ctx.textAlign = noteStyles.align === 'center' ? 'center' : noteStyles.align === 'right' ? 'right' : 'left';
-  const tx2 = noteStyles.align === 'center' ? tc.width/2 : noteStyles.align === 'right' ? tc.width - mx : mx;
-  const lh = fontSize + 10;
-  const lines = text.split('\n');
-  lines.forEach(rawLine => {
-    if (!rawLine.trim()) { y += lh * 0.6; return; }
-    const words = rawLine.split(' '); let line = '';
-    words.forEach(word => {
-      const test = line ? line + ' ' + word : word;
-      if (ctx.measureText(test).width > maxW && line) { ctx.fillText(line, tx2, y); y += lh; line = word; } else { line = test; }
+  const bodyFont = fnt(fs * S, st.bold);
+  text.replace(/\t/g, '    ').split('\n').forEach(raw => {
+    if (!raw.trim()) { y += ruled ? lh : Math.round(lh * 0.6); if (y > H - my) newPage(); return; }
+    ctx.font = bodyFont; const ind = (st.align === 'left' && !isRTL(raw)) ? (raw.match(/^ */)[0].length * ctx.measureText(' ').width) : 0;
+    wrap(raw, bodyFont, ind).forEach((t, i) => {
+      if (y + lh > H - my) newPage();
+      cur.items.push({ t, x: ax + (i === 0 ? ind : 0), y, font: bodyFont, size: fs * S, rtl: isRTL(t) }); y += lh;
     });
-    if (line) { ctx.fillText(line, tx2, y); y += lh; }
   });
-  tc.toBlob(blob => {
-    images.push({ file: blob, url: URL.createObjectURL(blob), name: 'note_' + Date.now() + '.png', size: blob.size, rotation: 0, selected: false });
-    renderGrid(); textModal.style.display = 'none'; showToast('📝 Text note added');
-  }, 'image/png');
+  return { pages, W, H, mx, my, lh, S, ruled, rtl };
 }
+const _noteCtx = document.createElement('canvas').getContext('2d');
+async function ensureNoteFont(fam, fs) { try { await Promise.all([document.fonts.load(`400 ${fs}px ${fam}`), document.fonts.load(`700 ${fs}px ${fam}`)]); } catch (e) {} }
+let _metaT = null;
+function updateNoteMeta() {
+  clearTimeout(_metaT);
+  _metaT = setTimeout(() => {
+    const text = textArea.value, title = noteTitleEl.value.trim(); const el = document.getElementById('note-meta');
+    const words = (text.trim().match(/\S+/g) || []).length;
+    if (!words && !title) { el.textContent = 'Tip: long notes automatically flow onto extra pages'; return; }
+    const L = layoutNote(_noteCtx, title, text, noteStyles, parseInt(noteSizeEl.value), noteFontEl.value, 1);
+    el.textContent = `${words} word${words === 1 ? '' : 's'} · ${L.pages.length} page${L.pages.length === 1 ? '' : 's'}`;
+  }, 180);
+}
+function renderNoteCanvases(L, st, fs) {
+  const { W, H, mx, my, lh, S, ruled, rtl } = L, ink = inkOf(st.bg), dark = isDarkBg(st.bg);
+  return L.pages.map((pg, pi) => {
+    const c = document.createElement('canvas'); c.width = W; c.height = H; const ctx = c.getContext('2d');
+    ctx.fillStyle = st.bg; ctx.fillRect(0, 0, W, H);
+    if (ruled) {
+      ctx.strokeStyle = 'rgba(180,140,60,0.28)'; ctx.lineWidth = Math.max(1, S);
+      const off = Math.round(fs * S * 1.28);
+      for (let yy = pg.ruledFrom + off; yy < H - my + lh * 0.5; yy += lh) { ctx.beginPath(); ctx.moveTo(mx - 20 * S, yy); ctx.lineTo(W - mx + 20 * S, yy); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(200,80,70,0.3)'; ctx.beginPath(); const mxl = rtl ? W - mx + 14 * S : mx - 14 * S; ctx.moveTo(mxl, 0); ctx.lineTo(mxl, H); ctx.stroke();
+    }
+    ctx.textBaseline = 'top'; ctx.direction = rtl ? 'rtl' : 'ltr'; ctx.fillStyle = ink;
+    pg.items.forEach(it => {
+      if (it.rule) { ctx.strokeStyle = dark ? 'rgba(167,139,250,0.7)' : 'rgba(124,58,237,0.5)'; ctx.lineWidth = 2 * S; ctx.beginPath(); ctx.moveTo(mx, it.y); ctx.lineTo(W - mx, it.y); ctx.stroke(); return; }
+      ctx.font = it.font; ctx.textAlign = st.align; ctx.direction = it.rtl ? 'rtl' : 'ltr'; ctx.fillStyle = ink; ctx.fillText(it.t, it.x, it.y);
+      if (st.underline && !it.title) {
+        const w = ctx.measureText(it.t).width, x0 = st.align === 'center' ? it.x - w / 2 : st.align === 'right' ? it.x - w : it.x;
+        ctx.strokeStyle = ink; ctx.lineWidth = Math.max(1, it.size / 16); const uy = it.y + it.size * 1.12; ctx.beginPath(); ctx.moveTo(x0, uy); ctx.lineTo(x0 + w, uy); ctx.stroke();
+      }
+    });
+    if (L.pages.length > 1) { ctx.font = `500 ${11 * S}px Inter, Arial, sans-serif`; ctx.textAlign = 'center'; ctx.direction = 'ltr'; ctx.fillStyle = dark ? 'rgba(244,238,255,.5)' : 'rgba(42,33,24,.45)'; ctx.fillText(`${pi + 1} / ${L.pages.length}`, W / 2, H - 42 * S); }
+    return c;
+  });
+}
+async function saveTextNote() {
+  const text = textArea.value.replace(/\s+$/, ''), title = noteTitleEl.value.trim();
+  if (!text.trim() && !title) { showToast('Write something first ✍️'); textArea.focus(); return; }
+  noteSaveBtn.disabled = true; const label = noteSaveBtn.textContent; noteSaveBtn.textContent = 'Adding…';
+  try {
+    const fs = parseInt(noteSizeEl.value), fam = noteFontEl.value, st = { ...noteStyles }, S = 2;
+    await ensureNoteFont(fam, fs * S);
+    const L2 = layoutNote(document.createElement('canvas').getContext('2d'), title, text, st, fs, fam, S);
+    const canvases = renderNoteCanvases(L2, st, fs); const stamp = Date.now();
+    for (let i = 0; i < canvases.length; i++) {
+      const blob = await new Promise(r => canvases[i].toBlob(r, 'image/png'));
+      images.push({ file: blob, url: URL.createObjectURL(blob), name: `note_${stamp}_p${i + 1}.png`, size: blob.size, rotation: 0, selected: false });
+    }
+    try { localStorage.removeItem(NOTE_DRAFT_KEY); } catch (e) {}
+    textModal.style.display = 'none'; renderGrid();
+    showToast(canvases.length > 1 ? `📝 Note added as ${canvases.length} pages` : '📝 Text note added');
+  } catch (err) { console.error(err); showToast('Could not create note: ' + (err.message || err)); }
+  finally { noteSaveBtn.disabled = false; noteSaveBtn.textContent = label; }
+}
+
+document.getElementById('btn-text').addEventListener('click', openTextModal);
+document.getElementById('text-cancel-btn').addEventListener('click', () => { closeTextModal(); if (textArea.value.trim() || noteTitleEl.value.trim()) showToast('Draft saved'); });
+document.getElementById('text-clear-btn').addEventListener('click', () => {
+  noteTitleEl.value = ''; textArea.value = ''; try { localStorage.removeItem(NOTE_DRAFT_KEY); } catch (e) {} updateNoteMeta(); textArea.focus(); showToast('Cleared');
+});
+noteSaveBtn.addEventListener('click', saveTextNote);
+[noteSizeEl, noteFontEl].forEach(el => el.addEventListener('input', () => { applyTextStyle(); saveDraft(); updateNoteMeta(); }));
+['bold', 'italic', 'underline'].forEach(id => document.getElementById('tb-' + id).addEventListener('click', () => { noteStyles[id] = !noteStyles[id]; applyTextStyle(); saveDraft(); updateNoteMeta(); }));
+['left', 'center', 'right'].forEach(a => document.getElementById('tb-' + a).addEventListener('click', () => { noteStyles.align = a; applyTextStyle(); saveDraft(); }));
+document.querySelectorAll('.tb-color').forEach(el => el.addEventListener('click', () => { noteStyles.bg = el.dataset.color; applyTextStyle(); saveDraft(); }));
+textArea.addEventListener('input', () => { saveDraft(); updateNoteMeta(); });
+noteTitleEl.addEventListener('input', () => { saveDraft(); updateNoteMeta(); });
+noteTitleEl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); textArea.focus(); } });
+textModal.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); saveTextNote(); } });
+textModal.addEventListener('pointerdown', e => { if (e.target === textModal) closeTextModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && textModal.style.display === 'flex') closeTextModal(); });
 
 // ─── CROPPER & OCR CONTEXT MODALS ────────────────────────────────────────────
 const cropModal = document.getElementById('crop-modal');
