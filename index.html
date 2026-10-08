@@ -487,6 +487,25 @@
   #gt-res { display:none; flex-direction:column; gap:10px; animation:resultPop .6s var(--ease) both; }
   .gt-spin { display:inline-block; animation:spin 1s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* ===== PERFORMANCE: static, cheap visuals ===== */
+  #aurora { background:
+    radial-gradient(circle at 8% 4%, rgba(139,92,246,.35), transparent 45%),
+    radial-gradient(circle at 95% 30%, rgba(236,72,153,.28), transparent 42%),
+    radial-gradient(circle at 25% 100%, rgba(6,182,212,.28), transparent 45%),
+    radial-gradient(circle at 90% 85%, rgba(245,158,11,.22), transparent 40%); }
+  .blob, #floaters, #trail { display:none !important; }
+  .header-title { animation:none !important; background-size:100% 100%; }
+  .logo-img, .logo-fallback, .badge, #dropzone.tool .ring, #gen-btn, #gen-btn::after, #result .res-icon, #empty .big, .gt-drop .drop-icon { animation:none !important; }
+  #gen-btn::after { display:none; }
+  .modal-overlay { backdrop-filter:none !important; }
+  .tool { will-change:auto; box-shadow:0 6px 14px -8px var(--c1); }
+  .tool::before, .tool::after { transition:none; }
+  .setting-box:hover { transform:none; box-shadow:var(--shadow); }
+  .thumb:hover { transform:none; }
+  .marquee { mask-image:none; -webkit-mask-image:none; }
+  body.shake .wrap { animation:none; }
+  @media (hover:none) { .tool:hover::before, .tool:hover::after { transform:none; } }
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous"></script>
@@ -1746,6 +1765,7 @@ function burstConfetti() {
 // ─── 3D TILT ON TOOL CARDS ───────────────────────────────────────────────────
 document.querySelectorAll('.tool').forEach(card => {
   const move = e => {
+    if (e.pointerType !== 'mouse') return;
     const t = e.touches ? e.touches[0] : e; const r = card.getBoundingClientRect();
     const x = (t.clientX - r.left) / r.width - 0.5, y = (t.clientY - r.top) / r.height - 0.5;
     card.style.transform = `perspective(700px) rotateY(${x * 16}deg) rotateX(${-y * 16}deg) translateZ(8px)`;
@@ -1927,18 +1947,6 @@ $('gt-run').addEventListener('click', async () => {
   const tl = $('tagline'); if (tl && !reduce) { const w = ['Images & PDFs to PDF', 'Scan · Merge · Compress', 'N-up, split, convert', 'Video tools, too 🎬', 'Private. Offline. Free.']; let i = 0;
     setInterval(() => { i = (i + 1) % w.length; tl.style.animation = 'none'; void tl.offsetWidth; tl.textContent = w[i]; tl.style.animation = ''; }, 2800); }
   if (reduce) return;
-  // floating icons
-  const fl = document.createElement('div'); fl.id = 'floaters'; document.body.prepend(fl);
-  ['📄', '🖼️', '✨', '🎬', '🗜️', '📸', '💜', '⭐', '🎵', '📑', '🔮', '🌈'].forEach((e, i) => { const s = document.createElement('span'); s.textContent = e;
-    s.style.cssText = `left:${(i * 8.3 + Math.random() * 6) % 96}%;font-size:${16 + Math.random() * 22}px;animation-duration:${16 + Math.random() * 18}s;animation-delay:${-Math.random() * 25}s`; fl.appendChild(s); });
-  // sparkle trail
-  const cv = document.createElement('canvas'); cv.id = 'trail'; document.body.appendChild(cv); const cx = cv.getContext('2d'); let ps = [], run = false, hue = 0;
-  const fit = () => { cv.width = innerWidth; cv.height = innerHeight; }; fit(); addEventListener('resize', fit);
-  function loop() { cx.clearRect(0, 0, cv.width, cv.height); ps = ps.filter(p => p.l > 0);
-    ps.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.04; p.l -= 0.025; cx.globalAlpha = Math.max(0, p.l); cx.fillStyle = `hsl(${p.h},95%,62%)`; cx.beginPath();
-      for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2, a2 = a + Math.PI / 4; cx.lineTo(p.x + Math.cos(a) * p.s * p.l, p.y + Math.sin(a) * p.s * p.l); cx.lineTo(p.x + Math.cos(a2) * p.s * .3 * p.l, p.y + Math.sin(a2) * p.s * .3 * p.l); } cx.fill(); });
-    if (ps.length) requestAnimationFrame(loop); else run = false; }
-  addEventListener('pointermove', e => { hue = (hue + 9) % 360; for (let i = 0; i < 2; i++) ps.push({ x: e.clientX, y: e.clientY, vx: (Math.random() - .5) * 1.6, vy: (Math.random() - .5) * 1.6 - .4, l: 1, s: 5 + Math.random() * 6, h: hue + Math.random() * 40 }); if (!run) { run = true; requestAnimationFrame(loop); } }, { passive: true });
   // ripples
   document.querySelectorAll('.btn-primary,#gen-btn,.nup-btn,.clear-btn,.tool,.action-btn,#dl-btn').forEach(el => el.classList.add('rip-host'));
   addEventListener('pointerdown', e => { const h = e.target.closest('.rip-host'); if (!h) return; const r = h.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2, s = document.createElement('span');
@@ -1947,7 +1955,7 @@ $('gt-run').addEventListener('click', async () => {
   $('gen-btn').addEventListener('click', () => { const th = document.querySelectorAll('#grid .thumb'); if (!th.length) return;
     th.forEach((t, i) => { t.style.setProperty('--d', (i * 0.04) + 's'); t.style.setProperty('--tx', ((Math.random() - .5) * 160) + 'px'); t.classList.add('fly'); });
     setTimeout(() => th.forEach(t => t.classList.remove('fly')), 1300 + th.length * 40);
-    setTimeout(() => { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 500); }, 700); });
+    });
 })();
 </script>
 </body>
