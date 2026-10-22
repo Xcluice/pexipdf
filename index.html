@@ -507,6 +507,16 @@
   .marquee { mask-image:none; -webkit-mask-image:none; }
   body.shake .wrap { animation:none; }
   @media (hover:none) { .tool:hover::before, .tool:hover::after { transform:none; } }
+
+  /* ===== rich note UI ===== */
+  .fmt-row { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .fmt-btn { background:var(--surface-sunken); border:1.5px solid var(--border); color:var(--text); border-radius:20px; padding:5px 11px; font-size:11.5px; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer; transition:.15s var(--ease); white-space:nowrap; }
+  .fmt-btn:hover { border-color:var(--accent); transform:translateY(-1px); }
+  .fmt-btn.active { background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#fff; border-color:transparent; }
+  #note-lang { width:auto; padding:5px 8px; font-size:11.5px; display:none; }
+  #note-preview { display:none; height:46vh; min-height:220px; overflow:auto; border:1.5px solid var(--border); border-radius:12px; background:var(--surface-sunken); }
+  #note-preview-inner { position:relative; margin:0 auto; overflow:hidden; }
+  #note-preview-frame { width:794px; border:0; transform-origin:0 0; display:block; }
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous"></script>
@@ -710,7 +720,7 @@
 
 <div id="text-modal" class="modal-overlay">
   <div class="modal-box" style="max-width:600px;">
-    <h2>Text Note / OCR</h2>
+    <h2>Text Note · Markdown · Code · SVG</h2>
     <div class="tb-title-row">
       <input type="text" class="tb-title-input" id="note-title" placeholder="Title (optional)…">
     </div>
@@ -750,7 +760,20 @@
       <div class="tb-divider"></div>
       <div class="tb-color-row"><div class="tb-color" data-color="#ffffff" style="background:#ffffff;" title="White"></div><div class="tb-color" data-color="#FFF9E6" style="background:#FFF9E6;" title="Ruled cream"></div><div class="tb-color" data-color="#F6E9CC" style="background:#F6E9CC;" title="Ruled gold"></div><div class="tb-color" data-color="#EAF5EE" style="background:#EAF5EE;" title="Mint"></div><div class="tb-color" data-color="#FDE7F1" style="background:#FDE7F1;" title="Rose"></div><div class="tb-color" data-color="#E3F2FF" style="background:#E3F2FF;" title="Sky"></div><div class="tb-color" data-color="#EEE6FF" style="background:#EEE6FF;" title="Lavender"></div><div class="tb-color" data-color="#1E1633" style="background:#1E1633;" title="Midnight"></div></div>
     </div>
-    <textarea id="text-input-area" placeholder="Start typing — Urdu/Kashmiri work too. Long notes flow onto new pages."></textarea>
+    <div class="fmt-row" id="fmt-row">
+      <button class="fmt-btn active" data-fmt="auto" title="Detect the format automatically">✨ Auto</button>
+      <button class="fmt-btn" data-fmt="text">Aa Text</button>
+      <button class="fmt-btn" data-fmt="md">Markdown</button>
+      <button class="fmt-btn" data-fmt="html">HTML · SVG</button>
+      <button class="fmt-btn" data-fmt="code">{ } Code</button>
+      <button class="fmt-btn" data-fmt="csv">CSV</button>
+      <select id="note-lang" title="Code language"><option value="auto">Auto-detect</option><option value="javascript">javascript</option><option value="typescript">typescript</option><option value="python">python</option><option value="java">java</option><option value="kotlin">kotlin</option><option value="c">c</option><option value="cpp">cpp</option><option value="csharp">csharp</option><option value="go">go</option><option value="rust">rust</option><option value="php">php</option><option value="ruby">ruby</option><option value="swift">swift</option><option value="sql">sql</option><option value="bash">bash</option><option value="json">json</option><option value="yaml">yaml</option><option value="xml">xml</option><option value="css">css</option><option value="scss">scss</option><option value="lua">lua</option><option value="r">r</option><option value="perl">perl</option><option value="markdown">markdown</option><option value="diff">diff</option><option value="ini">ini</option></select>
+      <button class="fmt-btn" id="note-preview-btn" style="margin-left:auto;">👁 Preview</button>
+      <button class="fmt-btn" id="note-open-btn" title="Load a .md / .html / .svg / code file">📂 Open</button>
+      <input type="file" id="note-file" hidden accept=".md,.markdown,.txt,.html,.htm,.svg,.xml,.csv,.tsv,.json,.js,.mjs,.jsx,.ts,.tsx,.py,.java,.kt,.kts,.c,.h,.cpp,.cc,.cs,.go,.rs,.php,.rb,.swift,.sql,.sh,.bash,.yml,.yaml,.css,.scss,.lua,.r,.pl,.gradle,.toml,.ini,.diff,text/*">
+    </div>
+    <textarea id="text-input-area" placeholder="Type or paste Markdown, HTML, SVG, code or CSV — it renders into the PDF. Plain text works too (Urdu/Kashmiri included)."></textarea>
+    <div id="note-preview"><div id="note-preview-inner"><iframe id="note-preview-frame" sandbox="allow-same-origin" title="Preview"></iframe></div></div>
     <div id="note-meta" style="font-size:11px;color:var(--muted);margin-top:-8px;">Tip: long notes automatically flow onto extra pages</div>
     <div class="modal-actions">
       <button class="btn-cancel" id="text-clear-btn" style="margin-right:auto;">Clear</button>
@@ -1150,23 +1173,25 @@ function applyTextStyle() {
   textArea.style.textDecoration = noteStyles.underline ? 'underline' : 'none';
   textArea.style.textAlign = noteStyles.align; textArea.style.background = noteStyles.bg; textArea.style.color = ink; textArea.style.caretColor = ink;
   textArea.dir = 'auto';
+  if (typeof schedulePreview === 'function') schedulePreview();
   noteTitleEl.style.background = noteStyles.bg; noteTitleEl.style.color = ink; noteTitleEl.style.caretColor = ink; noteTitleEl.dir = 'auto';
   syncToolbar();
 }
 function saveDraft() {
   try {
     if (!textArea.value.trim() && !noteTitleEl.value.trim()) { localStorage.removeItem(NOTE_DRAFT_KEY); return; }
-    localStorage.setItem(NOTE_DRAFT_KEY, JSON.stringify({ title: noteTitleEl.value, text: textArea.value, st: noteStyles, size: noteSizeEl.value, font: noteFontEl.value }));
+    localStorage.setItem(NOTE_DRAFT_KEY, JSON.stringify({ title: noteTitleEl.value, text: textArea.value, st: noteStyles, size: noteSizeEl.value, font: noteFontEl.value, fmt: noteFmt, lang: noteLang }));
   } catch (e) {}
 }
 function openTextModal() {
   let d = null; try { d = JSON.parse(localStorage.getItem(NOTE_DRAFT_KEY) || 'null'); } catch (e) {}
   if (d && (d.text || d.title)) {
     noteTitleEl.value = d.title || ''; textArea.value = d.text || ''; noteStyles = Object.assign({ bold: false, italic: false, underline: false, align: 'left', bg: '#ffffff' }, d.st || {});
-    if (d.size) noteSizeEl.value = d.size; if (d.font) noteFontEl.value = d.font; showToast('📝 Draft restored');
+    if (d.size) noteSizeEl.value = d.size; if (d.font) noteFontEl.value = d.font; setFmt(d.fmt || 'auto'); noteLang = d.lang || 'auto'; document.getElementById('note-lang').value = noteLang; showToast('📝 Draft restored');
   } else {
-    noteTitleEl.value = ''; textArea.value = ''; noteStyles = { bold: false, italic: false, underline: false, align: 'left', bg: '#ffffff' };
+    noteTitleEl.value = ''; textArea.value = ''; noteStyles = { bold: false, italic: false, underline: false, align: 'left', bg: '#ffffff' }; setFmt('auto'); noteLang = 'auto'; document.getElementById('note-lang').value = 'auto';
   }
+  if (previewOn) setPreview(false);
   applyTextStyle(); updateNoteMeta(); textModal.style.display = 'flex'; setTimeout(() => textArea.focus(), 100);
 }
 function closeTextModal() { saveDraft(); textModal.style.display = 'none'; }
@@ -1216,6 +1241,7 @@ function updateNoteMeta() {
     const text = textArea.value, title = noteTitleEl.value.trim(); const el = document.getElementById('note-meta');
     const words = (text.trim().match(/\S+/g) || []).length;
     if (!words && !title) { el.textContent = 'Tip: long notes automatically flow onto extra pages'; return; }
+    const rf = resolveFmt(text); if (rf !== 'text') { el.textContent = `${FMT_LABEL[rf]} · ${words} word${words === 1 ? '' : 's'} · rendered into PDF pages`; return; }
     const L = layoutNote(_noteCtx, title, text, noteStyles, parseInt(noteSizeEl.value), noteFontEl.value, 1);
     el.textContent = `${words} word${words === 1 ? '' : 's'} · ${L.pages.length} page${L.pages.length === 1 ? '' : 's'}`;
   }, 180);
@@ -1249,6 +1275,7 @@ async function saveTextNote() {
   if (!text.trim() && !title) { showToast('Write something first ✍️'); textArea.focus(); return; }
   noteSaveBtn.disabled = true; const label = noteSaveBtn.textContent; noteSaveBtn.textContent = 'Adding…';
   try {
+    const rf = resolveFmt(text); if (rf !== 'text') { await saveRichNote(rf, text, title); return; }
     const fs = parseInt(noteSizeEl.value), fam = noteFontEl.value, st = { ...noteStyles }, S = 2;
     await ensureNoteFont(fam, fs * S);
     const L2 = layoutNote(document.createElement('canvas').getContext('2d'), title, text, st, fs, fam, S);
@@ -1264,17 +1291,240 @@ async function saveTextNote() {
   finally { noteSaveBtn.disabled = false; noteSaveBtn.textContent = label; }
 }
 
+// ─── RICH NOTES: Markdown · HTML · SVG · Code · CSV ──────────────────────────
+let noteFmt = 'auto', noteLang = 'auto', previewOn = false;
+const FMT_LABEL = { md: 'Markdown', html: 'HTML / SVG', code: 'Code', csv: 'CSV table', text: 'Plain text' };
+const _loadedLib = {};
+const loadScript = src => _loadedLib[src] || (_loadedLib[src] = new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => { delete _loadedLib[src]; rej(new Error('Could not load ' + src)); }; document.head.appendChild(s); }));
+const loadRichLibs = fmt => Promise.all(['/vendor/lib/purify.min.js', '/vendor/lib/highlight.min.js'].concat(fmt === 'md' ? ['/vendor/lib/marked.min.js'] : []).map(loadScript));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const LANG_ALIAS = { js: 'javascript', ts: 'typescript', py: 'python', sh: 'bash', shell: 'bash', zsh: 'bash', yml: 'yaml', html: 'xml', htm: 'xml', svg: 'xml', kt: 'kotlin', cs: 'csharp', 'c++': 'cpp', rs: 'rust', rb: 'ruby', md: 'markdown', jsx: 'javascript', tsx: 'typescript', gradle: 'java' };
+const EXT_LANG = { js: 'javascript', mjs: 'javascript', jsx: 'javascript', ts: 'typescript', tsx: 'typescript', py: 'python', java: 'java', kt: 'kotlin', kts: 'kotlin', c: 'c', h: 'c', cpp: 'cpp', cc: 'cpp', hpp: 'cpp', cs: 'csharp', go: 'go', rs: 'rust', php: 'php', rb: 'ruby', swift: 'swift', sql: 'sql', sh: 'bash', bash: 'bash', json: 'json', yml: 'yaml', yaml: 'yaml', xml: 'xml', css: 'css', scss: 'scss', lua: 'lua', r: 'r', pl: 'perl', gradle: 'java', toml: 'ini', ini: 'ini', diff: 'diff' };
+
+function detectFormat(t) {
+  const s = t.trim(); if (!s) return 'text';
+  if (/^(<\?xml[^>]*>\s*)?(<!--[\s\S]*?-->\s*)?<svg[\s>]/i.test(s)) return 'html';
+  if (/^<!doctype html|^<html[\s>]/i.test(s) || /^<(div|p|h[1-6]|table|ul|ol|section|article|main|header|footer|span|img|a|style|figure|center|body)\b[\s\S]*<\/\w+>\s*$/i.test(s)) return 'html';
+  const lines = s.split('\n');
+  const mdStrong = /(^|\n)\s*(```|~~~)|(^|\n) {0,3}(#{1,6}\s+\S|>\s+\S)|\*\*[^*\n]+\*\*|\[[^\]\n]+\]\([^)\n]+\)|!\[[^\]\n]*\]\(|(^|\n)\|.+\|\s*\n\|?\s*:?-+:?[-| :]*\|?\s*(\n|$)|(^|\n)\s*[-*+]\s+\S|(^|\n)\s*\d+\.\s+\S/.test(s);
+  const codeKw = /^\s*(import\s+[\w.{*]|from\s+[\w.]+\s+import|def\s+\w+\(|class\s+\w+|function\s+\w+|const\s+\w+\s*=|let\s+\w+\s*=|var\s+\w+\s*=|package\s+[\w.]+|#include\s*[<"]|using\s+[\w.]+;|public\s+(static\s+)?(class|void)|fn\s+\w+\(|SELECT\s.+\sFROM|<\?php|#!\/)/im.test(s);
+  const endRatio = lines.filter(l => /[;{}]\s*$/.test(l)).length / Math.max(1, lines.length);
+  if (codeKw && !/```|\*\*[^*\n]+\*\*|\[[^\]\n]+\]\([^)\n]+\)/.test(s)) return 'code';
+  if (mdStrong) return 'md';
+  if (lines.length >= 3 && endRatio > 0.4) return 'code';
+  if (lines.length >= 2) for (const d of [',', '\t', ';']) { const c = lines.slice(0, 5).map(l => l.split(d).length); if (c[0] >= 2 && c.every(x => x === c[0])) return 'csv'; }
+  return 'text';
+}
+const resolveFmt = text => noteFmt === 'auto' ? detectFormat(text || '') : noteFmt;
+
+function splitHl(html) {
+  const open = [];
+  return html.split('\n').map(l => {
+    const pre = open.join(''); const re = /<span[^>]*>|<\/span>/g; let m;
+    while ((m = re.exec(l))) { if (m[0][1] === '/') open.pop(); else open.push(m[0]); }
+    return pre + l + '</span>'.repeat(open.length);
+  });
+}
+function hlLines(code, lang) {
+  let html, used = lang;
+  try {
+    if (lang && lang !== 'auto' && hljs.getLanguage(lang)) html = hljs.highlight(code, { language: lang, ignoreIllegals: true }).value;
+    else if (lang === 'auto') { const r = hljs.highlightAuto(code); html = r.value; used = r.language || 'text'; }
+    else html = esc(code);
+  } catch (e) { html = esc(code); }
+  return { lines: splitHl(html), lang: used };
+}
+function codeBlockHTML(code, lang, numbers) {
+  const { lines, lang: l } = hlLines(code.replace(/\s+$/, ''), LANG_ALIAS[lang] || lang);
+  return `<div class="codeblock">${l && l !== 'text' ? `<div class="lang">${esc(l)}</div>` : ''}${lines.map((ln, i) => `<div class="cl">${numbers ? `<span class="ln">${i + 1}</span>` : ''}<span class="lc">${ln || '​'}</span></div>`).join('')}</div>`;
+}
+function csvHTML(t) {
+  const first = t.split('\n')[0]; const d = [',', '\t', ';', '|'].map(c => [c, first.split(c).length]).sort((a, b) => b[1] - a[1])[0][0];
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < t.length; i++) { const ch = t[i];
+    if (q) { if (ch === '"' && t[i + 1] === '"') { cell += '"'; i++; } else if (ch === '"') q = false; else cell += ch; }
+    else if (ch === '"') q = true; else if (ch === d) { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && t[i + 1] === '\n') i++; row.push(cell); cell = ''; if (row.length > 1 || row[0]) rows.push(row); row = []; }
+    else cell += ch; }
+  row.push(cell); if (row.length > 1 || row[0]) rows.push(row);
+  if (!rows.length) return '';
+  return '<table><thead><tr>' + rows[0].map(c => `<th>${esc(c)}</th>`).join('') + '</tr></thead><tbody>' + rows.slice(1).map(r => '<tr>' + r.map(c => `<td>${esc(c)}</td>`).join('') + '</tr>').join('') + '</tbody></table>';
+}
+function postProcess(html) {
+  const d = new DOMParser().parseFromString('<body>' + html, 'text/html');
+  d.querySelectorAll('pre').forEach(pre => {
+    const code = pre.querySelector('code'), txt = (code || pre).textContent; const m = ((code && code.className) || '').match(/language-([\w+#-]+)/); const lang = m ? m[1].toLowerCase() : '';
+    const isSvg = lang === 'svg' || (/^\s*(<\?xml[^>]*>\s*)?<svg[\s>]/i.test(txt) && (!lang || lang === 'xml' || lang === 'html'));
+    const wrap = d.createElement('div');
+    if (isSvg) { wrap.className = 'svgwrap'; wrap.innerHTML = DOMPurify.sanitize(txt, { USE_PROFILES: { svg: true, svgFilters: true } }); pre.replaceWith(wrap); }
+    else { wrap.innerHTML = codeBlockHTML(txt, lang, false); pre.replaceWith(wrap.firstElementChild); }
+  });
+  d.querySelectorAll('input[type=checkbox]').forEach(i => { const s = d.createElement('span'); s.className = 'cb'; s.textContent = i.hasAttribute('checked') ? '☑' : '☐'; i.replaceWith(s); });
+  return d.body.innerHTML;
+}
+function buildBody(fmt, text, lang) {
+  if (fmt === 'code') return codeBlockHTML(text, lang, true);
+  let h;
+  if (fmt === 'md') h = marked.parse(text, { gfm: true, breaks: true });
+  else if (fmt === 'html') h = text;
+  else if (fmt === 'csv') h = csvHTML(text);
+  else return `<div style="white-space:pre-wrap">${esc(text)}</div>`;
+  h = DOMPurify.sanitize(h, { USE_PROFILES: { html: true, svg: true, svgFilters: true }, FORCE_BODY: true });
+  return postProcess(h);
+}
+function noteCSS(st, fs, fam, M) {
+  const dark = isDarkBg(st.bg), ink = inkOf(st.bg), ac = dark ? '#A78BFA' : '#7C3AED', mono = "ui-monospace,SFMono-Regular,Menlo,Consolas,'Courier New',monospace";
+  const t = dark ? { kw: '#C4A7FF', str: '#6EE7B7', num: '#FBBF24', com: '#8B86A8', fn: '#7DB5FF', bi: '#F9A8D4', at: '#67E8F9', ty: '#67E8F9', meta: '#9CA3AF' }
+                 : { kw: '#8B3FD9', str: '#0E8F63', num: '#C2650A', com: '#8A8AA0', fn: '#2563EB', bi: '#DB2777', at: '#0891B2', ty: '#0891B2', meta: '#6B7280' };
+  return `*{box-sizing:border-box}html,body{margin:0;background:${st.bg}}
+body{width:794px;padding:${M}px;color:${ink};font:${fs}px/1.6 ${fam};text-align:${st.align};overflow-wrap:anywhere}
+p,li,h1,h2,h3,h4,h5,h6,td,th,blockquote{unicode-bidi:plaintext}
+h1,h2,h3,h4,h5,h6{line-height:1.25;margin:1em 0 .4em;font-weight:700}h1{font-size:1.9em}h2{font-size:1.5em}h3{font-size:1.25em}h4{font-size:1.1em}
+h1,h2{padding-bottom:.25em;border-bottom:1px solid rgba(128,128,128,.3)}h1.nt{margin-top:0;border-bottom:2px solid ${ac}}
+p{margin:.6em 0}ul,ol{padding-left:1.5em;margin:.5em 0}li{margin:.2em 0}li>ul,li>ol{margin:.1em 0}
+a{color:${ac};text-decoration:underline}hr{border:0;border-top:1px solid rgba(128,128,128,.4);margin:1.2em 0}
+blockquote{margin:.8em 0;padding:.4em 1em;border-left:4px solid ${ac};background:rgba(124,58,237,.08);border-radius:0 8px 8px 0}blockquote p{margin:.3em 0}
+img{max-width:100%}svg{max-width:100%;height:auto}body>svg,.svgwrap>svg{display:block;margin:.8em auto}.svgwrap{text-align:center;margin:.8em 0}
+table{width:100%;border-collapse:collapse;margin:.8em 0;font-size:.95em}th,td{border:1px solid rgba(128,128,128,.4);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:rgba(124,58,237,.14);font-weight:700}tbody tr:nth-child(even) td{background:rgba(128,128,128,.07)}
+code{font-family:${mono};font-size:.88em;background:rgba(128,128,128,.2);padding:1px 6px;border-radius:5px}
+.codeblock{background:${dark ? '#120C24' : 'rgba(124,58,237,.06)'};border:1px solid rgba(128,128,128,.3);border-radius:10px;padding:10px 0;margin:.8em 0;text-align:left;font-family:${mono};font-size:${Math.max(11, Math.round(fs * .86))}px}
+.codeblock .lang{padding:0 14px 6px;font-size:.78em;letter-spacing:.8px;text-transform:uppercase;color:${t.com};font-weight:700}
+.cl{display:flex;padding:0 14px;line-height:1.5}.cl .ln{flex:none;width:2.6em;text-align:right;padding-right:12px;color:${t.com};opacity:.75}
+.cl .lc{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;tab-size:4;font-family:${mono}}.cl code{background:none;padding:0}
+.cb{font-size:1.1em;margin-right:.3em}
+.hljs-keyword,.hljs-selector-tag,.hljs-doctag,.hljs-template-tag,.hljs-type.hljs-keyword{color:${t.kw};font-weight:600}
+.hljs-string,.hljs-regexp,.hljs-addition,.hljs-template-variable{color:${t.str}}.hljs-number,.hljs-literal,.hljs-symbol,.hljs-bullet{color:${t.num}}
+.hljs-comment,.hljs-quote{color:${t.com};font-style:italic}.hljs-title,.hljs-section,.hljs-function .hljs-title{color:${t.fn}}
+.hljs-built_in,.hljs-name,.hljs-tag{color:${t.bi}}.hljs-attr,.hljs-attribute,.hljs-property,.hljs-variable,.hljs-selector-class,.hljs-selector-id{color:${t.at}}
+.hljs-type,.hljs-class .hljs-title{color:${t.ty}}.hljs-meta,.hljs-operator,.hljs-punctuation{color:${t.meta}}.hljs-deletion{color:#EF4444}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:700}`;
+}
+function buildNoteDoc(fmt, text, title, st, fs, fam, lang, M) {
+  const body = (title ? `<h1 class="nt">${esc(title)}</h1>` : '') + buildBody(fmt, text, lang);
+  const fonts = /Inter|Fraunces/.test(fam) ? '<link rel="stylesheet" crossorigin href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fraunces:wght@400;600;700&display=swap">' : '';
+  return `<!doctype html><html><head><meta charset="utf-8">${fonts}<style>${noteCSS(st, fs, fam, M)}</style></head><body>${body}</body></html>`;
+}
+// ── page layout inside the iframe: never cut through a line of text / image ──
+function collectItems(doc) {
+  const w = doc.defaultView, items = [], tw = doc.createTreeWalker(doc.body, 4); let n;
+  while ((n = tw.nextNode())) {
+    if (!n.nodeValue.trim()) continue; const pe = n.parentElement; if (!pe || pe.closest('style,script,svg')) continue;
+    const r = doc.createRange(); r.selectNodeContents(n); const hd = !!pe.closest('h1,h2,h3,h4,h5,h6');
+    for (const q of r.getClientRects()) if (q.height >= 1) items.push({ top: q.top + w.scrollY, bottom: q.bottom + w.scrollY, hd });
+  }
+  doc.querySelectorAll('img,svg,canvas,hr,video').forEach(e => { if (e.parentElement && e.parentElement.closest('svg')) return; const q = e.getBoundingClientRect(); if (q.height >= 1) items.push({ top: q.top + w.scrollY, bottom: q.bottom + w.scrollY, hd: false }); });
+  return items.sort((a, b) => a.top - b.top);
+}
+function paginateRich(items, docH, M, H) {
+  const end = docH - M, maxH = H - 2 * M, pages = []; let s = M, guard = 0;
+  while (s < end - 1 && guard++ < 500) {
+    let L = s + maxH, forced = false;
+    if (L >= end) { pages.push({ s, e: end }); break; }
+    for (let k = 0; k < 60; k++) {
+      const cr = items.filter(i => i.top < L - 0.5 && i.bottom > L + 0.5); if (!cr.length) break;
+      const nl = Math.min(...cr.map(i => i.top)); if (nl <= s + 24) { L = s + maxH; forced = true; break; } L = nl;
+    }
+    if (!forced) {
+      const before = items.filter(i => i.bottom <= L + 1 && i.top >= s - 1); let last = null; before.forEach(i => { if (!last || i.bottom > last.bottom) last = i; });
+      if (last && last.hd) { const top = Math.min(...before.filter(i => i.hd && i.bottom >= last.top - 60).map(i => i.top)); if (top > s + 24) L = top; }
+    }
+    pages.push({ s, e: L });
+    if (forced) s = L; else { const nx = items.find(i => i.top >= L - 1); s = nx ? Math.max(L - 4, nx.top - 3) : end; }
+  }
+  return pages;
+}
+async function saveRichNote(fmt, text, title) {
+  const fs = parseInt(noteSizeEl.value), fam = noteFontEl.value, st = { ...noteStyles }, S = 2, W = 794, H = 1123, M = 56;
+  noteSaveBtn.textContent = 'Loading renderer…';
+  await loadRichLibs(fmt); await loadScript('/vendor/lib/html2canvas.min.js');
+  const iframe = document.createElement('iframe'); iframe.setAttribute('sandbox', 'allow-same-origin');
+  iframe.style.cssText = `position:fixed;left:-10000px;top:0;width:${W}px;height:${H}px;border:0;`; document.body.appendChild(iframe);
+  try {
+    await new Promise(r => { iframe.onload = r; iframe.srcdoc = buildNoteDoc(fmt, text, title, st, fs, fam, noteLang, M); });
+    const doc = iframe.contentDocument;
+    await Promise.race([doc.fonts.ready, new Promise(r => setTimeout(r, 3000))]);
+    await Promise.race([Promise.all([...doc.images].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; }))), new Promise(r => setTimeout(r, 4000))]);
+    // rasterise every top-level <svg> through an <img> (html2canvas clips raw inline SVG)
+    const svgs = [...doc.querySelectorAll('svg')].filter(sv => !(sv.parentElement && sv.parentElement.closest('svg')));
+    await Promise.all(svgs.map(sv => new Promise(res => {
+      try {
+        const r = sv.getBoundingClientRect(); if (!(r.width > 0 && r.height > 0)) return res();
+        const cs = doc.defaultView.getComputedStyle(sv), w = Math.round(r.width * 100) / 100, h = Math.round(r.height * 100) / 100;
+        const cl = sv.cloneNode(true); cl.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); cl.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        cl.setAttribute('width', w); cl.setAttribute('height', h); if (!cl.getAttribute('viewBox')) cl.setAttribute('viewBox', `0 0 ${w} ${h}`);
+        cl.removeAttribute('style'); let xml = new XMLSerializer().serializeToString(cl).replace(/currentColor/g, cs.color);
+        const img = doc.createElement('img'); img.alt = ''; img.style.cssText = `display:${cs.display === 'inline' ? 'inline-block' : cs.display};width:${w}px;height:${h}px;margin:${cs.margin};vertical-align:${cs.verticalAlign};max-width:none`;
+        img.onload = img.onerror = () => res(); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml); sv.replaceWith(img);
+      } catch (e) { res(); }
+    })));
+    const docH = Math.ceil(doc.documentElement.scrollHeight); iframe.style.height = docH + 'px';
+    const pages = paginateRich(collectItems(doc), docH, M, H), stamp = Date.now(), dark = isDarkBg(st.bg);
+    for (let k = 0; k < pages.length; k++) {
+      noteSaveBtn.textContent = `Rendering ${k + 1}/${pages.length}…`;
+      const pg = pages[k], y0 = Math.max(0, pg.s - M);
+      const c = await html2canvas(doc.documentElement, { scale: S, x: 0, y: y0, width: W, height: H, windowWidth: W, windowHeight: docH, scrollX: 0, scrollY: 0, backgroundColor: st.bg, useCORS: true, logging: false, imageTimeout: 4000 });
+      const ctx = c.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = st.bg; // html2canvas leaves its scale/offset transform on the context
+      if (k > 0) ctx.fillRect(0, 0, c.width, M * S);
+      const bt = Math.round((M + (pg.e - pg.s) + 2) * S); if (bt < c.height) ctx.fillRect(0, bt, c.width, c.height - bt);
+      if (pages.length > 1) { ctx.font = `500 ${11 * S}px Inter, Arial, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = dark ? 'rgba(244,238,255,.5)' : 'rgba(42,33,24,.45)'; ctx.fillText(`${k + 1} / ${pages.length}`, c.width / 2, c.height - M * S * 0.45); }
+      const blob = await new Promise(r => c.toBlob(r, 'image/png')); c.width = c.height = 0;
+      images.push({ file: blob, url: URL.createObjectURL(blob), name: `note_${stamp}_p${k + 1}.png`, size: blob.size, rotation: 0, selected: false });
+    }
+    try { localStorage.removeItem(NOTE_DRAFT_KEY); } catch (e) {}
+    textModal.style.display = 'none'; renderGrid();
+    showToast(`📝 ${FMT_LABEL[fmt]} note added${pages.length > 1 ? ' as ' + pages.length + ' pages' : ''}`);
+  } finally { iframe.remove(); }
+}
+// ── live preview ──
+let _prevT = null;
+function setFmt(f) {
+  noteFmt = f; document.querySelectorAll('.fmt-btn[data-fmt]').forEach(b => b.classList.toggle('active', b.dataset.fmt === f));
+  document.getElementById('note-lang').style.display = f === 'code' ? 'inline-block' : 'none';
+}
+async function renderPreview() {
+  const box = document.getElementById('note-preview'), inner = document.getElementById('note-preview-inner'), fr = document.getElementById('note-preview-frame');
+  const text = textArea.value, title = noteTitleEl.value.trim(), rf = resolveFmt(text);
+  try { await loadRichLibs(rf); } catch (e) { inner.textContent = e.message; return; }
+  const st = { ...noteStyles }; const scale = Math.min(1, (box.clientWidth || 540) / 794);
+  fr.onload = () => { try { const h = fr.contentDocument.documentElement.scrollHeight; fr.style.height = h + 'px'; inner.style.height = Math.ceil(h * scale) + 'px'; } catch (e) {} };
+  inner.style.width = Math.floor(794 * scale) + 'px'; fr.style.transform = `scale(${scale})`;
+  fr.srcdoc = buildNoteDoc(rf, text, title, st, parseInt(noteSizeEl.value), noteFontEl.value, noteLang, 56);
+}
+function schedulePreview() { if (!previewOn) return; clearTimeout(_prevT); _prevT = setTimeout(renderPreview, 250); }
+function setPreview(on) {
+  previewOn = on; document.getElementById('note-preview').style.display = on ? 'block' : 'none'; textArea.style.display = on ? 'none' : 'block';
+  document.getElementById('note-preview-btn').textContent = on ? '✏️ Edit' : '👁 Preview'; if (on) renderPreview();
+}
+function wrapSel(kind, rf) {
+  const M = { md: { bold: ['**', '**'], italic: ['*', '*'], underline: ['<u>', '</u>'] }, html: { bold: ['<b>', '</b>'], italic: ['<i>', '</i>'], underline: ['<u>', '</u>'] } }[rf][kind];
+  const a = textArea.selectionStart, b = textArea.selectionEnd, v = textArea.value;
+  textArea.value = v.slice(0, a) + M[0] + v.slice(a, b) + M[1] + v.slice(b); const p = a + M[0].length; textArea.focus(); textArea.setSelectionRange(p, p + (b - a));
+  textArea.dispatchEvent(new Event('input'));
+}
+document.querySelectorAll('.fmt-btn[data-fmt]').forEach(b => b.addEventListener('click', () => { setFmt(b.dataset.fmt); saveDraft(); updateNoteMeta(); schedulePreview(); }));
+document.getElementById('note-lang').addEventListener('change', e => { noteLang = e.target.value; saveDraft(); schedulePreview(); });
+document.getElementById('note-preview-btn').addEventListener('click', () => setPreview(!previewOn));
+document.getElementById('note-open-btn').addEventListener('click', () => document.getElementById('note-file').click());
+document.getElementById('note-file').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return; if (f.size > 2 * 1024 * 1024) { showToast('File too large (max 2 MB)'); return; }
+  const text = await f.text(), ext = (f.name.match(/\.(\w+)$/) || [, ''])[1].toLowerCase();
+  textArea.value = text; if (!noteTitleEl.value) noteTitleEl.value = f.name.replace(/\.[^.]+$/, '');
+  if (['md', 'markdown'].includes(ext)) setFmt('md'); else if (['html', 'htm', 'svg', 'xhtml'].includes(ext)) setFmt('html'); else if (['csv', 'tsv'].includes(ext)) setFmt('csv');
+  else if (EXT_LANG[ext]) { setFmt('code'); noteLang = EXT_LANG[ext]; document.getElementById('note-lang').value = noteLang; } else setFmt('auto');
+  saveDraft(); updateNoteMeta(); schedulePreview(); showToast('Loaded ' + f.name);
+});
+
 document.getElementById('btn-text').addEventListener('click', openTextModal);
 document.getElementById('text-cancel-btn').addEventListener('click', () => { closeTextModal(); if (textArea.value.trim() || noteTitleEl.value.trim()) showToast('Draft saved'); });
 document.getElementById('text-clear-btn').addEventListener('click', () => {
   noteTitleEl.value = ''; textArea.value = ''; try { localStorage.removeItem(NOTE_DRAFT_KEY); } catch (e) {} updateNoteMeta(); textArea.focus(); showToast('Cleared');
 });
 noteSaveBtn.addEventListener('click', saveTextNote);
-[noteSizeEl, noteFontEl].forEach(el => el.addEventListener('input', () => { applyTextStyle(); saveDraft(); updateNoteMeta(); }));
-['bold', 'italic', 'underline'].forEach(id => document.getElementById('tb-' + id).addEventListener('click', () => { noteStyles[id] = !noteStyles[id]; applyTextStyle(); saveDraft(); updateNoteMeta(); }));
+[noteSizeEl, noteFontEl].forEach(el => el.addEventListener('input', () => { applyTextStyle(); saveDraft(); updateNoteMeta(); schedulePreview(); }));
+['bold', 'italic', 'underline'].forEach(id => document.getElementById('tb-' + id).addEventListener('click', () => { const rf = resolveFmt(textArea.value); if (rf === 'md' || rf === 'html') { wrapSel(id, rf); return; } noteStyles[id] = !noteStyles[id]; applyTextStyle(); saveDraft(); updateNoteMeta(); }));
 ['left', 'center', 'right'].forEach(a => document.getElementById('tb-' + a).addEventListener('click', () => { noteStyles.align = a; applyTextStyle(); saveDraft(); }));
 document.querySelectorAll('.tb-color').forEach(el => el.addEventListener('click', () => { noteStyles.bg = el.dataset.color; applyTextStyle(); saveDraft(); }));
-textArea.addEventListener('input', () => { saveDraft(); updateNoteMeta(); });
+textArea.addEventListener('input', () => { saveDraft(); updateNoteMeta(); schedulePreview(); });
 noteTitleEl.addEventListener('input', () => { saveDraft(); updateNoteMeta(); });
 noteTitleEl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); textArea.focus(); } });
 textModal.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); saveTextNote(); } });
@@ -1303,7 +1553,7 @@ async function runOCR(idx) {
   try {
     const { data: { text } } = await Tesseract.recognize(images[idx].url, 'eng');
     document.getElementById('note-title').value = '';
-    textArea.value = text.trim();
+    textArea.value = text.trim(); setFmt('text');
     noteStyles = { bold: false, italic: false, underline: false, align: 'left', bg: '#ffffff' };
     ['bold','italic','underline','center','right'].forEach(id => document.getElementById('tb-' + id).classList.remove('active'));
     document.getElementById('tb-left').classList.add('active');
