@@ -1,0 +1,91 @@
+name: Build and release PexiPDF Android
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Version
+        id: v
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            V="${GITHUB_REF_NAME#v}"
+          else
+            V="1.0.${GITHUB_RUN_NUMBER}"
+          fi
+          echo "name=$V" >> "$GITHUB_OUTPUT"
+          echo "tag=v$V" >> "$GITHUB_OUTPUT"
+      - name: Restyle UI and bundle Android assets
+        run: |
+          rm -rf app/src/main/assets
+          mkdir -p app/src/main/assets/vendor/lib app/src/main/assets/vendor/ffmpeg
+          python3 scripts/build_android_ui.py
+          cp favicon.png app/src/main/assets/favicon.png
+          cp -r vendor/lib/* app/src/main/assets/vendor/lib/
+          cp -r vendor/ffmpeg/* app/src/main/assets/vendor/ffmpeg/
+          if ! git diff --quiet index.html; then
+            git config user.name "Xcluice"
+            git config user.email "mohammadmominwani123@gmail.com"
+            git add index.html
+            git commit -m "Apply restyled Android app-style UI to index.html [skip ci]"
+            git push origin HEAD:main
+          fi
+          ls -lh app/src/main/assets
+      - name: Build signed release APK
+        run: |
+          set +e
+          gradle :app:assembleRelease -Pvname=${{ steps.v.outputs.name }} -Pvcode=${{ github.run_number }} --no-daemon --console=plain > build.log 2>&1
+          code=$?
+          if [ $code -ne 0 ]; then
+            grep -E "^e: |error:|What went wrong|Could not|Execution failed|Unresolved|ERROR:|Missing class" -A2 build.log | head -50 | cut -c1-300 | while IFS= read -r l; do echo "::error::$l"; done
+            tail -n 40 build.log
+          fi
+          exit $code
+      - name: Name and inspect APK
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk "PexiPDF-${{ steps.v.outputs.name }}.apk"
+          ls -lh "PexiPDF-${{ steps.v.outputs.name }}.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PexiPDF-${{ steps.v.outputs.name }}
+          path: PexiPDF-*.apk
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.v.outputs.tag }}
+        run: |
+          NOTES=$(cat << 'EOF'
+          - Complete Android app-style UI restyle for PexiPDF by Xcluice (4-tab bottom navigation, Material 3 bottom sheets, OLED monochrome dark & light themes, smooth transitions)
+          - Signed Android 8.0+ release APK with custom PexiPDF adaptive icon
+          - Native Save to Downloads/PexiPDF, Android Share Sheet, live Camera Scanner, and multi-file picker
+          - Built-in GitHub Releases force-update screen with What's New changelog card
+          EOF
+          )
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" PexiPDF-*.apk --clobber
+          else
+            gh release create "$TAG" PexiPDF-*.apk --target "$GITHUB_SHA" --title "PexiPDF ${{ steps.v.outputs.name }}" --notes "$NOTES" --latest
+          fi
