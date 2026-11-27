@@ -50,7 +50,7 @@ jobs:
             git config user.name "Xcluice"
             git config user.email "mohammadmominwani123@gmail.com"
             git add index.html
-            git commit -m "Apply restyled Android app-style UI to index.html [skip ci]"
+            git commit -m "Sync Android UI and camera fixes to index.html [skip ci]"
             git push origin HEAD:main
           fi
           ls -lh app/src/main/assets
@@ -78,10 +78,11 @@ jobs:
           TAG: ${{ steps.v.outputs.tag }}
         run: |
           NOTES=$(cat << 'EOF'
-          - Complete Android app-style UI restyle for PexiPDF by Xcluice (4-tab bottom navigation, Material 3 bottom sheets, OLED monochrome dark & light themes, smooth transitions)
-          - Signed Android 8.0+ release APK with custom PexiPDF adaptive icon
-          - Native Save to Downloads/PexiPDF, Android Share Sheet, live Camera Scanner, and multi-file picker
-          - Built-in GitHub Releases force-update screen with What's New changelog card
+          - Fixed slow/stalling camera capture: faster 1280x960 live scanner, UI-thread camera permission grant, Flip Camera toggle, and System Camera button for hardware autofocus & flash
+          - Fixed Android 8.0 Oreo storage permission handling when saving files to Downloads/PexiPDF
+          - Fixed multi-MIME file picker filter (image/*, application/pdf) on Android WebView
+          - Added chunked file streaming for large PDFs and videos during Save and Share
+          - Fixed Pages tab flex layout spacing and empty-state alignment
           EOF
           )
           if gh release view "$TAG" >/dev/null 2>&1; then

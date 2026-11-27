@@ -6,7 +6,10 @@ import android.app.Activity
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color as AndroidColor
+import android.graphics.Matrix
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -37,13 +40,28 @@ import androidx.webkit.WebViewAssetLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileOutputStream
+import java.util.concurrent.ConcurrentHashMap
 
 class MainActivity : ComponentActivity() {
 
     private var webView: WebView? = null
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private var pendingCameraPermissionRequest: PermissionRequest? = null
+    private var pendingNativeCameraLaunch = false
+    private var pendingCameraFile: File? = null
+    private var pendingLegacySave: Triple<File, String, String>? = null
+
+    private data class ActiveTransfer(
+        val tempFile: File,
+        val stream: FileOutputStream,
+        val fileName: String,
+        val mimeType: String,
+        val mode: String
+    )
+    private val transfers = ConcurrentHashMap<String, ActiveTransfer>()
 
     private val filePickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -73,7 +91,100 @@ class MainActivity : ComponentActivity() {
         val req = pendingCameraPermissionRequest
         pendingCameraPermissionRequest = null
         if (req != null) {
-            if (granted) req.grant(req.resources) else req.deny()
+            runOnUiThread {
+                if (granted) {
+                    req.grant(arrayOf(PermissionRequest.RESOURCE_VIDEO_CAPTURE))
+                } else {
+                    req.deny()
+                }
+            }
+        }
+        if (pendingNativeCameraLaunch) {
+            pendingNativeCameraLaunch = false
+            if (granted) launchSystemCamera()
+            else Toast.makeText(this, "Camera permission required", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private val storagePermLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        val pending = pendingLegacySave ?: return@registerForActivityResult
+        pendingLegacySave = null
+        if (granted) {
+            lifecycleScope.launch(Dispatchers.IO) {
+                saveTempFileToDownloads(pending.first, pending.second, pending.third)
+            }
+        } else {
+            pending.first.delete()
+            Toast.makeText(this, "Storage permission needed to save to Downloads", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private val takePictureLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        val photoFile = pendingCameraFile
+        pendingCameraFile = null
+        if (!success || photoFile == null || !photoFile.exists()) {
+            photoFile?.delete()
+            return@registerForActivityResult
+        }
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeFile(photoFile.absolutePath, opts)
+                val maxDim = 1800
+                var sample = 1
+                while (opts.outWidth / sample > maxDim * 2 || opts.outHeight / sample > maxDim * 2) {
+                    sample *= 2
+                }
+                val decodeOpts = BitmapFactory.Options().apply { inSampleSize = sample }
+                var bmp = BitmapFactory.decodeFile(photoFile.absolutePath, decodeOpts)
+                    ?: throw IllegalStateException("Could not decode photo")
+
+                // Cap longest side to 1800px for crisp, fast PDF generation
+                val longest = maxOf(bmp.width, bmp.height)
+                if (longest > maxDim) {
+                    val scale = maxDim.toFloat() / longest.toFloat()
+                    val m = Matrix().apply { postScale(scale, scale) }
+                    val scaled = Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, m, true)
+                    if (scaled != bmp) bmp.recycle()
+                    bmp = scaled
+                }
+
+                val baos = ByteArrayOutputStream()
+                bmp.compress(Bitmap.CompressFormat.JPEG, 86, baos)
+                bmp.recycle()
+                photoFile.delete()
+
+                val bytes = baos.toByteArray()
+                val b64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+                val name = "scan_${System.currentTimeMillis()}.jpg"
+                withContext(Dispatchers.Main) {
+                    webView?.evaluateJavascript(
+                        "window.__pexiAddCapturedPhoto && window.__pexiAddCapturedPhoto('$b64', '$name', ${bytes.size})",
+                        null
+                    )
+                }
+            } catch (e: Exception) {
+                photoFile.delete()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "Photo import failed", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun launchSystemCamera() {
+        try {
+            val dir = File(cacheDir, "camera").apply { mkdirs() }
+            val f = File(dir, "cap_${System.currentTimeMillis()}.jpg")
+            pendingCameraFile = f
+            val uri = FileProvider.getUriForFile(this, "${packageName}.files", f)
+            takePictureLauncher.launch(uri)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Could not open camera", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -119,6 +230,9 @@ class MainActivity : ComponentActivity() {
                                 createPexiWebView(ctx) { isDark ->
                                     darkTheme = isDark
                                     applySystemBars(isDark)
+                                    webView?.setBackgroundColor(
+                                        AndroidColor.parseColor(if (isDark) "#0A0A0C" else "#F4F4F5")
+                                    )
                                 }
                             }
                         )
@@ -202,13 +316,16 @@ class MainActivity : ComponentActivity() {
                 ): Boolean {
                     filePathCallback?.onReceiveValue(null)
                     filePathCallback = callback
+                    val mimes = params.acceptTypes
+                        .flatMap { it.split(",") }
+                        .map { it.trim() }
+                        .filter { it.contains("/") }
+                        .distinct()
                     val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                         addCategory(Intent.CATEGORY_OPENABLE)
-                        val accepts = params.acceptTypes.filter { it.isNotBlank() }
-                        type = if (accepts.size == 1 && accepts[0].contains("/")) accepts[0] else "*/*"
-                        if (accepts.size > 1) {
-                            val mimes = accepts.filter { it.contains("/") }.toTypedArray()
-                            if (mimes.isNotEmpty()) putExtra(Intent.EXTRA_MIME_TYPES, mimes)
+                        type = if (mimes.size == 1) mimes[0] else "*/*"
+                        if (mimes.size > 1) {
+                            putExtra(Intent.EXTRA_MIME_TYPES, mimes.toTypedArray())
                         }
                         if (params.mode == FileChooserParams.MODE_OPEN_MULTIPLE) {
                             putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
@@ -226,16 +343,20 @@ class MainActivity : ComponentActivity() {
                 override fun onPermissionRequest(request: PermissionRequest) {
                     val needsCam = request.resources.contains(PermissionRequest.RESOURCE_VIDEO_CAPTURE)
                     if (!needsCam) {
-                        request.deny()
+                        runOnUiThread { request.deny() }
                         return
                     }
                     if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.CAMERA)
                         == PackageManager.PERMISSION_GRANTED
                     ) {
-                        request.grant(request.resources)
+                        runOnUiThread {
+                            request.grant(arrayOf(PermissionRequest.RESOURCE_VIDEO_CAPTURE))
+                        }
                     } else {
                         pendingCameraPermissionRequest = request
-                        cameraPermLauncher.launch(Manifest.permission.CAMERA)
+                        runOnUiThread {
+                            cameraPermLauncher.launch(Manifest.permission.CAMERA)
+                        }
                     }
                 }
             }
@@ -245,10 +366,109 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onPause() {
+        webView?.onPause()
+        super.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        webView?.onResume()
+    }
+
     override fun onDestroy() {
+        transfers.values.forEach {
+            runCatching { it.stream.close() }
+            runCatching { it.tempFile.delete() }
+        }
+        transfers.clear()
         webView?.destroy()
         webView = null
         super.onDestroy()
+    }
+
+    private suspend fun saveTempFileToDownloads(tempFile: File, safeName: String, mime: String) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val values = ContentValues().apply {
+                    put(MediaStore.Downloads.DISPLAY_NAME, safeName)
+                    put(MediaStore.Downloads.MIME_TYPE, mime)
+                    put(MediaStore.Downloads.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/PexiPDF")
+                    put(MediaStore.Downloads.IS_PENDING, 1)
+                }
+                val resolver = contentResolver
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                    ?: throw IllegalStateException("Cannot create download entry")
+                resolver.openOutputStream(uri)?.use { out ->
+                    tempFile.inputStream().use { it.copyTo(out) }
+                }
+                values.clear()
+                values.put(MediaStore.Downloads.IS_PENDING, 0)
+                resolver.update(uri, values, null, null)
+                tempFile.delete()
+            } else {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                    pendingLegacySave = Triple(tempFile, safeName, mime)
+                    withContext(Dispatchers.Main) {
+                        storagePermLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    }
+                    return
+                }
+                @Suppress("DEPRECATION")
+                val dir = File(
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                    "PexiPDF"
+                ).apply { mkdirs() }
+                val dest = File(dir, safeName)
+                tempFile.inputStream().use { src -> dest.outputStream().use { src.copyTo(it) } }
+                tempFile.delete()
+            }
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Saved to Downloads/PexiPDF/$safeName",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        } catch (e: Exception) {
+            tempFile.delete()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Save failed: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    private suspend fun shareTempFile(tempFile: File, safeName: String, mime: String) {
+        try {
+            val dir = File(cacheDir, "shared").apply { mkdirs() }
+            val dest = File(dir, safeName)
+            tempFile.inputStream().use { src -> dest.outputStream().use { src.copyTo(it) } }
+            tempFile.delete()
+            val uri = FileProvider.getUriForFile(this@MainActivity, "${packageName}.files", dest)
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = mime
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            withContext(Dispatchers.Main) {
+                startActivity(Intent.createChooser(intent, "Share $safeName"))
+            }
+        } catch (e: Exception) {
+            tempFile.delete()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Share failed: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 
     inner class PexiBridge(private val onThemeChange: (Boolean) -> Unit) {
@@ -258,6 +478,20 @@ class MainActivity : ComponentActivity() {
         @JavascriptInterface
         fun setTheme(isDark: Boolean) {
             runOnUiThread { onThemeChange(isDark) }
+        }
+
+        @JavascriptInterface
+        fun openNativeCamera() {
+            runOnUiThread {
+                if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_GRANTED
+                ) {
+                    launchSystemCamera()
+                } else {
+                    pendingNativeCameraLaunch = true
+                    cameraPermLauncher.launch(Manifest.permission.CAMERA)
+                }
+            }
         }
 
         @JavascriptInterface
@@ -277,50 +511,43 @@ class MainActivity : ComponentActivity() {
         }
 
         @JavascriptInterface
+        fun beginTransfer(id: String, rawName: String, mimeType: String, mode: String) {
+            val safeName = rawName.replace(Regex("[^a-zA-Z0-9._-]"), "_").ifBlank { "pexipdf_output.pdf" }
+            val mime = mimeType.ifBlank { "application/octet-stream" }
+            val dir = File(cacheDir, "xfer").apply { mkdirs() }
+            val temp = File(dir, "${id}_$safeName")
+            transfers[id] = ActiveTransfer(temp, FileOutputStream(temp), safeName, mime, mode)
+        }
+
+        @JavascriptInterface
+        fun appendTransfer(id: String, base64Chunk: String) {
+            val xfer = transfers[id] ?: return
+            val bytes = Base64.decode(base64Chunk, Base64.DEFAULT)
+            xfer.stream.write(bytes)
+        }
+
+        @JavascriptInterface
+        fun finishTransfer(id: String) {
+            val xfer = transfers.remove(id) ?: return
+            lifecycleScope.launch(Dispatchers.IO) {
+                runCatching { xfer.stream.flush(); xfer.stream.close() }
+                if (xfer.mode == "share") {
+                    shareTempFile(xfer.tempFile, xfer.fileName, xfer.mimeType)
+                } else {
+                    saveTempFileToDownloads(xfer.tempFile, xfer.fileName, xfer.mimeType)
+                }
+            }
+        }
+
+        @JavascriptInterface
         fun saveFile(base64: String, rawName: String, mimeType: String) {
             val safeName = rawName.replace(Regex("[^a-zA-Z0-9._-]"), "_").ifBlank { "pexipdf_output.pdf" }
             val mime = mimeType.ifBlank { "application/octet-stream" }
             lifecycleScope.launch(Dispatchers.IO) {
-                try {
-                    val bytes = Base64.decode(base64, Base64.DEFAULT)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        val values = ContentValues().apply {
-                            put(MediaStore.Downloads.DISPLAY_NAME, safeName)
-                            put(MediaStore.Downloads.MIME_TYPE, mime)
-                            put(MediaStore.Downloads.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/PexiPDF")
-                            put(MediaStore.Downloads.IS_PENDING, 1)
-                        }
-                        val resolver = contentResolver
-                        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
-                            ?: throw IllegalStateException("Cannot create download entry")
-                        resolver.openOutputStream(uri)?.use { it.write(bytes) }
-                        values.clear()
-                        values.put(MediaStore.Downloads.IS_PENDING, 0)
-                        resolver.update(uri, values, null, null)
-                    } else {
-                        @Suppress("DEPRECATION")
-                        val dir = File(
-                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                            "PexiPDF"
-                        ).apply { mkdirs() }
-                        File(dir, safeName).writeBytes(bytes)
-                    }
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Saved to Downloads/PexiPDF/$safeName",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Save failed: ${e.message}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
+                val dir = File(cacheDir, "xfer").apply { mkdirs() }
+                val temp = File(dir, "direct_${System.currentTimeMillis()}_$safeName")
+                temp.writeBytes(Base64.decode(base64, Base64.DEFAULT))
+                saveTempFileToDownloads(temp, safeName, mime)
             }
         }
 
@@ -329,29 +556,10 @@ class MainActivity : ComponentActivity() {
             val safeName = rawName.replace(Regex("[^a-zA-Z0-9._-]"), "_").ifBlank { "pexipdf_output.pdf" }
             val mime = mimeType.ifBlank { "application/pdf" }
             lifecycleScope.launch(Dispatchers.IO) {
-                try {
-                    val bytes = Base64.decode(base64, Base64.DEFAULT)
-                    val dir = File(cacheDir, "shared").apply { mkdirs() }
-                    val f = File(dir, safeName)
-                    f.writeBytes(bytes)
-                    val uri = FileProvider.getUriForFile(this@MainActivity, "${packageName}.files", f)
-                    val intent = Intent(Intent.ACTION_SEND).apply {
-                        type = mime
-                        putExtra(Intent.EXTRA_STREAM, uri)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    withContext(Dispatchers.Main) {
-                        startActivity(Intent.createChooser(intent, "Share $safeName"))
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Share failed: ${e.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
+                val dir = File(cacheDir, "xfer").apply { mkdirs() }
+                val temp = File(dir, "share_${System.currentTimeMillis()}_$safeName")
+                temp.writeBytes(Base64.decode(base64, Base64.DEFAULT))
+                shareTempFile(temp, safeName, mime)
             }
         }
     }
