@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Idempotent Android app-style UI restyler for PexiPDF by Xcluice."""
+"""Idempotent Android app-style UI restyler for PexiPDF by Xcluice (with Pro PDF Viewer & Home Pages)."""
 import re
 from pathlib import Path
 
@@ -20,7 +20,7 @@ if "settings-dark-toggle" not in orig_js:
         "localStorage.setItem('pexipdf_theme', isDark ? 'dark' : 'light');",
         "localStorage.setItem('pexipdf_theme', isDark ? 'dark' : 'light');\n"
         "  const st = document.getElementById('settings-dark-toggle'); if (st) st.checked = !!isDark;\n"
-        "  const mc = document.querySelector('meta[name=\"theme-color\"]'); if (mc) mc.setAttribute('content', isDark ? '#0A0A0A' : '#F4F4F4');\n"
+        "  const mc = document.querySelector('meta[name=\"theme-color\"]'); if (mc) mc.setAttribute('content', isDark ? '#0A0A0C' : '#F4F4F5');\n"
         "  if (window.PexiBridge && window.PexiBridge.setTheme) { try { window.PexiBridge.setTheme(!!isDark); } catch(_){} }"
     )
 
@@ -31,7 +31,7 @@ if "https://pexipdf.vercel.app" not in orig_js:
         "corePath: (window.PexiBridge ? 'https://pexipdf.vercel.app' : location.origin) + '/vendor/ffmpeg-core/ffmpeg-core.js',"
     )
 
-# 3. Fix Pages tab flex layout & sync page count badge
+# 3. Fix Pages workspace flex layout & sync page count
 if "window.__pexiSyncPages" not in orig_js:
     orig_js = orig_js.replace(
         "function renderGrid() {",
@@ -43,7 +43,11 @@ if "window.__pexiSyncPages" not in orig_js:
     )
 orig_js = orig_js.replace(
     "if (!images.length) { sec.style.display = 'none'; empty.style.display = 'block';",
-    "if (!images.length) { sec.style.display = 'none'; empty.style.display = 'flex';"
+    "if (!images.length) { sec.style.display = 'none'; empty.style.display = 'none';"
+)
+orig_js = orig_js.replace(
+    "if (!images.length) { sec.style.display = 'none'; empty.style.display = 'flex';",
+    "if (!images.length) { sec.style.display = 'none'; empty.style.display = 'none';"
 )
 orig_js = orig_js.replace(
     "sec.style.display = 'block'; empty.style.display = 'none';",
@@ -58,9 +62,9 @@ if "window.__pexiShareBlob" not in orig_js:
         "  if (navigator.share) await navigator.share({ files: [new File([lastPdfBlob], fileName, { type: 'application/pdf' })], title: fileName }).catch(() => {});"
     )
 
-# 5. Fast Camera Scanner replacement (fixes slow capture, autoplay stall, facingMode fallback, clean track cleanup)
+# 5. Fast Camera Scanner replacement
 old_cam_pattern = re.compile(
-    r"document\.getElementById\('btn-camera'\)\.addEventListener\('click'[\s\S]*?// ─── TEXT NOTE CONVERT ENGINE",
+    r"(?:let camFacing =|document\.getElementById\('btn-camera'\)\.addEventListener\('click')[\s\S]*?// ─── TEXT NOTE CONVERT ENGINE",
     re.M
 )
 fast_cam_js = r"""let camFacing = 'environment';
@@ -171,11 +175,10 @@ if old_cam_pattern.search(orig_js):
     orig_js = old_cam_pattern.sub(lambda _: fast_cam_js, orig_js, count=1)
 
 ANDROID_BRIDGE_JS = r"""
-// ─── ANDROID APP SHELL · TABS · BOTTOM SHEETS · NATIVE BRIDGE ────────────────
+// ─── ANDROID APP SHELL · PRO PDF VIEWER · NATIVE BRIDGE ──────────────────────
 (function () {
-  const tabs = ['home', 'pages', 'tools', 'settings'];
+  const tabs = ['home', 'viewer', 'tools', 'settings'];
   let activeTab = 'home';
-  let prevPageCount = 0;
 
   function switchTab(tab, opts) {
     if (!tabs.includes(tab)) return;
@@ -193,6 +196,7 @@ ANDROID_BRIDGE_JS = r"""
       b.classList.toggle('active', b.dataset.tab === tab);
       b.setAttribute('aria-selected', b.dataset.tab === tab ? 'true' : 'false');
     });
+    document.body.classList.toggle('viewer-mode', tab === 'viewer');
     const scrollEl = document.getElementById('app-scroll');
     if (scrollEl && !(opts && opts.keepScroll)) scrollEl.scrollTop = 0;
   }
@@ -203,30 +207,23 @@ ANDROID_BRIDGE_JS = r"""
   });
 
   window.__pexiSyncPages = function (n) {
-    const badge = document.getElementById('nav-pages-badge');
     const topPill = document.getElementById('top-pages-pill');
     const topPillNum = document.getElementById('top-pages-num');
-    const banner = document.getElementById('home-workspace-banner');
-    const bannerCount = document.getElementById('home-ws-count');
-    if (badge) {
-      badge.textContent = n > 99 ? '99+' : String(n);
-      badge.style.display = n > 0 ? 'flex' : 'none';
-    }
     if (topPill && topPillNum) {
       topPillNum.textContent = n + (n === 1 ? ' page' : ' pages');
       topPill.style.display = n > 0 ? 'inline-flex' : 'none';
     }
-    if (banner && bannerCount) {
-      banner.style.display = n > 0 ? 'flex' : 'none';
-      bannerCount.textContent = n + (n === 1 ? ' page in workspace' : ' pages in workspace');
-    }
-    if (n > prevPageCount && prevPageCount === 0 && (activeTab === 'home' || activeTab === 'tools')) {
-      setTimeout(() => switchTab('pages'), 180);
-    }
-    prevPageCount = n;
+    const lastBtn = document.getElementById('pv-open-last');
+    if (lastBtn) lastBtn.style.display = (typeof lastPdfBlob !== 'undefined' && lastPdfBlob) ? 'inline-flex' : 'none';
   };
 
-  // Receive photo captured by Android native system camera
+  document.getElementById('top-pages-pill')?.addEventListener('click', () => {
+    switchTab('home', { keepScroll: true });
+    const sec = document.getElementById('preview-section');
+    if (sec && sec.style.display !== 'none') sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  document.getElementById('pages-add-btn')?.addEventListener('click', () => document.getElementById('file-input').click());
+
   window.__pexiAddCapturedPhoto = function (base64, name, size) {
     try {
       const bin = atob(base64);
@@ -242,19 +239,14 @@ ANDROID_BRIDGE_JS = r"""
         selected: false
       });
       renderGrid();
-      switchTab('pages');
-      showToast('📸 Photo added to Pages');
+      switchTab('home', { keepScroll: true });
+      setTimeout(() => document.getElementById('preview-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+      showToast('📸 Photo added');
     } catch (e) {
       console.error(e);
       showToast('Could not import captured photo');
     }
   };
-
-  document.getElementById('top-pages-pill')?.addEventListener('click', () => switchTab('pages'));
-  document.getElementById('home-workspace-banner')?.addEventListener('click', () => switchTab('pages'));
-  document.getElementById('pages-add-btn')?.addEventListener('click', () => document.getElementById('file-input').click());
-  document.getElementById('empty-browse-btn')?.addEventListener('click', () => document.getElementById('file-input').click());
-  document.getElementById('empty-cam-btn')?.addEventListener('click', () => document.getElementById('btn-camera').click());
 
   document.querySelectorAll('[data-trigger]').forEach(el => {
     el.addEventListener('click', () => {
@@ -290,6 +282,381 @@ ANDROID_BRIDGE_JS = r"""
     });
   });
 
+  const PV = {
+    doc: null,
+    name: '',
+    rawBytes: null,
+    numPages: 0,
+    curPage: 1,
+    zoom: 1.0,
+    mode: 'scroll',
+    theme: 'orig',
+    rendered: new Set(),
+    rendering: new Set(),
+    io: null,
+    textCache: new Map(),
+    matches: [],
+    matchIdx: -1,
+    thumbsBuilt: false
+  };
+
+  const pvEmpty = document.getElementById('pv-empty');
+  const pvStage = document.getElementById('pv-stage');
+  const pvPages = document.getElementById('pv-pages');
+  const pvTitle = document.getElementById('pv-title');
+  const pvPagePill = document.getElementById('pv-page-pill');
+  const pvProgFill = document.getElementById('pv-prog-fill');
+  const pvZoomLabel = document.getElementById('pv-zoom-label');
+  const pvSearchBar = document.getElementById('pv-search-bar');
+  const pvSearchInput = document.getElementById('pv-search-input');
+  const pvSearchCount = document.getElementById('pv-search-count');
+  const pvThumbs = document.getElementById('pv-thumbs');
+  const pvThemeBtn = document.getElementById('pv-theme-btn');
+  const pvModeBtn = document.getElementById('pv-mode-btn');
+
+  function pvUpdateMeta() {
+    if (!PV.numPages) return;
+    pvPagePill.textContent = `${PV.curPage} / ${PV.numPages}`;
+    pvProgFill.style.width = Math.round((PV.curPage / PV.numPages) * 100) + '%';
+    pvZoomLabel.textContent = Math.round(PV.zoom * 100) + '%';
+    pvThumbs.querySelectorAll('.pv-thumb').forEach(t => {
+      t.classList.toggle('active', parseInt(t.dataset.p, 10) === PV.curPage);
+    });
+  }
+
+  async function pvRenderPage(pNum) {
+    if (!PV.doc || PV.rendered.has(pNum) || PV.rendering.has(pNum)) return;
+    const slot = pvPages.querySelector(`.pv-page[data-p="${pNum}"]`);
+    if (!slot) return;
+    PV.rendering.add(pNum);
+    try {
+      const page = await PV.doc.getPage(pNum);
+      const baseVp = page.getViewport({ scale: 1 });
+      const availW = Math.max(260, pvPages.clientWidth - 16);
+      const fitScale = availW / baseVp.width;
+      const cssScale = fitScale * PV.zoom;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2.2);
+      const vp = page.getViewport({ scale: cssScale * dpr });
+
+      let canvas = slot.querySelector('canvas');
+      if (!canvas) {
+        canvas = document.createElement('canvas');
+        slot.innerHTML = '';
+        slot.appendChild(canvas);
+        const badge = document.createElement('span');
+        badge.className = 'pv-pnum';
+        badge.textContent = String(pNum);
+        slot.appendChild(badge);
+      }
+      canvas.width = Math.floor(vp.width);
+      canvas.height = Math.floor(vp.height);
+      canvas.style.width = Math.floor(baseVp.width * cssScale) + 'px';
+      canvas.style.height = Math.floor(baseVp.height * cssScale) + 'px';
+      slot.style.minHeight = Math.floor(baseVp.height * cssScale) + 'px';
+
+      const ctx = canvas.getContext('2d', { alpha: false });
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      PV.rendered.add(pNum);
+    } catch (e) {
+      console.error('Render page error', pNum, e);
+    } finally {
+      PV.rendering.delete(pNum);
+    }
+  }
+
+  function pvRebuildLayout() {
+    if (!PV.doc) return;
+    if (PV.io) PV.io.disconnect();
+    PV.rendered.clear();
+    PV.rendering.clear();
+    pvPages.innerHTML = '';
+    pvPages.className = `pv-pages theme-${PV.theme} mode-${PV.mode}`;
+
+    const pagesToBuild = PV.mode === 'single' ? [PV.curPage] : Array.from({ length: PV.numPages }, (_, i) => i + 1);
+    const estH = Math.round(Math.max(320, (pvPages.clientWidth - 16) * 1.414 * PV.zoom));
+
+    pagesToBuild.forEach(p => {
+      const slot = document.createElement('div');
+      slot.className = 'pv-page';
+      slot.dataset.p = String(p);
+      slot.style.minHeight = estH + 'px';
+      slot.innerHTML = `<div class="pv-skel">Page ${p}</div>`;
+      pvPages.appendChild(slot);
+    });
+
+    PV.io = new IntersectionObserver(entries => {
+      let topMost = null;
+      entries.forEach(en => {
+        const p = parseInt(en.target.dataset.p, 10);
+        if (en.isIntersecting) {
+          pvRenderPage(p);
+          if (en.intersectionRatio > 0.25 && (topMost === null || p < topMost)) topMost = p;
+        }
+      });
+      if (PV.mode === 'scroll' && topMost !== null && topMost !== PV.curPage) {
+        PV.curPage = topMost;
+        pvUpdateMeta();
+      }
+    }, { root: pvPages, rootMargin: '500px 0px', threshold: [0.01, 0.3] });
+
+    pvPages.querySelectorAll('.pv-page').forEach(el => PV.io.observe(el));
+    pvRenderPage(PV.curPage);
+    if (PV.mode === 'scroll' && PV.curPage + 1 <= PV.numPages) pvRenderPage(PV.curPage + 1);
+    pvUpdateMeta();
+  }
+
+  function pvJumpTo(p) {
+    if (!PV.doc) return;
+    const target = Math.max(1, Math.min(PV.numPages, p));
+    PV.curPage = target;
+    if (PV.mode === 'single') {
+      pvRebuildLayout();
+    } else {
+      const el = pvPages.querySelector(`.pv-page[data-p="${target}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        pvRenderPage(target);
+      }
+    }
+    pvUpdateMeta();
+  }
+
+  async function pvBuildThumbs() {
+    if (!PV.doc || PV.thumbsBuilt) return;
+    PV.thumbsBuilt = true;
+    pvThumbs.innerHTML = '';
+    const cap = Math.min(PV.numPages, 60);
+    for (let i = 1; i <= cap; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'pv-thumb' + (i === PV.curPage ? ' active' : '');
+      btn.dataset.p = String(i);
+      btn.innerHTML = `<canvas></canvas><span>${i}</span>`;
+      btn.addEventListener('click', () => pvJumpTo(i));
+      pvThumbs.appendChild(btn);
+      (async (pNum, c) => {
+        try {
+          const page = await PV.doc.getPage(pNum);
+          const vp0 = page.getViewport({ scale: 1 });
+          const sc = 72 / vp0.width;
+          const vp = page.getViewport({ scale: sc });
+          c.width = vp.width; c.height = vp.height;
+          await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+        } catch (_) {}
+      })(i, btn.querySelector('canvas'));
+    }
+  }
+
+  async function pvOpenBytes(uint8, filename) {
+    if (!window['pdfjs-dist/build/pdf']) {
+      showToast('PDF engine still loading…');
+      return;
+    }
+    try {
+      showToast('Opening PDF…', 1200);
+      const pdfjs = window['pdfjs-dist/build/pdf'];
+      const doc = await pdfjs.getDocument({ data: uint8.slice() }).promise;
+      PV.doc = doc;
+      PV.rawBytes = uint8;
+      PV.name = filename || 'document.pdf';
+      PV.numPages = doc.numPages;
+      PV.curPage = 1;
+      PV.zoom = 1.0;
+      PV.textCache.clear();
+      PV.matches = [];
+      PV.matchIdx = -1;
+      PV.thumbsBuilt = false;
+      pvThumbs.style.display = 'none';
+      pvSearchBar.style.display = 'none';
+      pvSearchInput.value = '';
+      pvSearchCount.textContent = '';
+
+      pvTitle.textContent = PV.name;
+      pvEmpty.style.display = 'none';
+      pvStage.style.display = 'flex';
+      switchTab('viewer', { keepScroll: true });
+      requestAnimationFrame(() => pvRebuildLayout());
+    } catch (err) {
+      console.error(err);
+      showToast('Could not open PDF (check password or file)');
+    }
+  }
+  window.__pexiOpenPdfBytes = pvOpenBytes;
+
+  document.getElementById('pv-file-input')?.addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const buf = new Uint8Array(await f.arrayBuffer());
+    await pvOpenBytes(buf, f.name);
+    e.target.value = '';
+  });
+
+  const openLastPdf = async () => {
+    if (typeof lastPdfBlob === 'undefined' || !lastPdfBlob) { showToast('Generate a PDF first'); return; }
+    const buf = new Uint8Array(await lastPdfBlob.arrayBuffer());
+    const nm = document.getElementById('res-name')?.textContent || 'output.pdf';
+    await pvOpenBytes(buf, nm);
+  };
+  document.getElementById('pv-open-last')?.addEventListener('click', openLastPdf);
+  document.getElementById('res-read-btn')?.addEventListener('click', openLastPdf);
+
+  document.getElementById('pv-close-btn')?.addEventListener('click', () => {
+    PV.doc = null; PV.rawBytes = null; PV.numPages = 0;
+    pvPages.innerHTML = '';
+    pvStage.style.display = 'none';
+    pvEmpty.style.display = 'flex';
+  });
+
+  pvThemeBtn?.addEventListener('click', () => {
+    const order = ['orig', 'night', 'sepia'];
+    const labels = { orig: '☀', night: '☾', sepia: '📜' };
+    const names = { orig: 'Original paper', night: 'OLED Night mode', sepia: 'Warm Sepia' };
+    PV.theme = order[(order.indexOf(PV.theme) + 1) % order.length];
+    pvThemeBtn.textContent = labels[PV.theme];
+    pvPages.className = `pv-pages theme-${PV.theme} mode-${PV.mode}`;
+    showToast(names[PV.theme], 1100);
+  });
+
+  pvModeBtn?.addEventListener('click', () => {
+    PV.mode = PV.mode === 'scroll' ? 'single' : 'scroll';
+    pvModeBtn.textContent = PV.mode === 'scroll' ? 'Scroll' : 'Page';
+    pvRebuildLayout();
+    showToast(PV.mode === 'scroll' ? 'Continuous scroll' : 'Single-page mode', 1100);
+  });
+
+  document.getElementById('pv-thumbs-btn')?.addEventListener('click', () => {
+    const show = pvThumbs.style.display === 'none' || !pvThumbs.style.display;
+    pvThumbs.style.display = show ? 'flex' : 'none';
+    if (show) pvBuildThumbs();
+  });
+
+  document.getElementById('pv-search-btn')?.addEventListener('click', () => {
+    const show = pvSearchBar.style.display === 'none' || !pvSearchBar.style.display;
+    pvSearchBar.style.display = show ? 'flex' : 'none';
+    if (show) pvSearchInput.focus();
+  });
+
+  async function pvRunSearch(query) {
+    const q = (query || '').trim().toLowerCase();
+    PV.matches = []; PV.matchIdx = -1;
+    if (!q || !PV.doc) { pvSearchCount.textContent = ''; return; }
+    pvSearchCount.textContent = '…';
+    for (let p = 1; p <= PV.numPages; p++) {
+      let txt = PV.textCache.get(p);
+      if (txt === undefined) {
+        const page = await PV.doc.getPage(p);
+        const content = await page.getTextContent();
+        txt = content.items.map(it => it.str).join(' ');
+        PV.textCache.set(p, txt);
+      }
+      if (txt.toLowerCase().includes(q)) PV.matches.push(p);
+    }
+    if (!PV.matches.length) {
+      pvSearchCount.textContent = '0 matches';
+    } else {
+      PV.matchIdx = 0;
+      pvSearchCount.textContent = `1 / ${PV.matches.length} pg`;
+      pvJumpTo(PV.matches[0]);
+    }
+  }
+  let _searchTimer = null;
+  pvSearchInput?.addEventListener('input', () => {
+    clearTimeout(_searchTimer);
+    _searchTimer = setTimeout(() => pvRunSearch(pvSearchInput.value), 280);
+  });
+  document.getElementById('pv-search-prev')?.addEventListener('click', () => {
+    if (!PV.matches.length) return;
+    PV.matchIdx = (PV.matchIdx - 1 + PV.matches.length) % PV.matches.length;
+    pvSearchCount.textContent = `${PV.matchIdx + 1} / ${PV.matches.length} pg`;
+    pvJumpTo(PV.matches[PV.matchIdx]);
+  });
+  document.getElementById('pv-search-next')?.addEventListener('click', () => {
+    if (!PV.matches.length) return;
+    PV.matchIdx = (PV.matchIdx + 1) % PV.matches.length;
+    pvSearchCount.textContent = `${PV.matchIdx + 1} / ${PV.matches.length} pg`;
+    pvJumpTo(PV.matches[PV.matchIdx]);
+  });
+
+  document.getElementById('pv-copy-btn')?.addEventListener('click', async () => {
+    if (!PV.doc) return;
+    try {
+      let txt = PV.textCache.get(PV.curPage);
+      if (txt === undefined) {
+        const page = await PV.doc.getPage(PV.curPage);
+        const content = await page.getTextContent();
+        txt = content.items.map(it => it.str).join(' ').trim();
+        PV.textCache.set(PV.curPage, txt);
+      }
+      if (!txt) { showToast('No selectable text on this page'); return; }
+      await navigator.clipboard.writeText(txt);
+      showToast(`📋 Copied Page ${PV.curPage} text`);
+    } catch (_) {
+      showToast('Could not copy text');
+    }
+  });
+
+  pvPagePill?.addEventListener('click', () => {
+    if (!PV.numPages) return;
+    const val = prompt(`Jump to page (1–${PV.numPages}):`, String(PV.curPage));
+    const n = parseInt(val || '', 10);
+    if (!isNaN(n) && n >= 1 && n <= PV.numPages) pvJumpTo(n);
+  });
+
+  const setZoom = z => {
+    PV.zoom = Math.max(0.6, Math.min(3.0, Math.round(z * 100) / 100));
+    pvRebuildLayout();
+  };
+  document.getElementById('pv-prev')?.addEventListener('click', () => pvJumpTo(PV.curPage - 1));
+  document.getElementById('pv-next')?.addEventListener('click', () => pvJumpTo(PV.curPage + 1));
+  document.getElementById('pv-zout')?.addEventListener('click', () => setZoom(PV.zoom - 0.25));
+  document.getElementById('pv-zin')?.addEventListener('click', () => setZoom(PV.zoom + 0.25));
+  pvZoomLabel?.addEventListener('click', () => setZoom(1.0));
+
+  let _lastTap = 0;
+  pvPages?.addEventListener('touchend', e => {
+    if (e.touches.length > 0) return;
+    const now = Date.now();
+    if (now - _lastTap < 280) {
+      setZoom(PV.zoom > 1.2 ? 1.0 : 1.75);
+      _lastTap = 0;
+    } else {
+      _lastTap = now;
+    }
+  });
+
+  let extPdfChunks = [];
+  let extPdfName = 'document.pdf';
+  window.__pexiExternalPdfStart = function (name) {
+    extPdfChunks = [];
+    extPdfName = name || 'document.pdf';
+    switchTab('viewer', { keepScroll: true });
+    showToast('Opening ' + extPdfName + '…', 1500);
+  };
+  window.__pexiExternalPdfChunk = function (b64) {
+    extPdfChunks.push(b64);
+  };
+  window.__pexiExternalPdfEnd = function () {
+    try {
+      const parts = extPdfChunks.map(c => {
+        const bin = atob(c);
+        const arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        return arr;
+      });
+      extPdfChunks = [];
+      const total = parts.reduce((s, a) => s + a.length, 0);
+      const merged = new Uint8Array(total);
+      let off = 0;
+      for (const a of parts) { merged.set(a, off); off += a.length; }
+      pvOpenBytes(merged, extPdfName);
+    } catch (e) {
+      console.error(e);
+      showToast('Failed to open PDF');
+    }
+  };
+
   window.__pexiBack = function () {
     const lb = document.getElementById('lightbox');
     if (lb && lb.style.display === 'flex') {
@@ -313,6 +680,10 @@ ANDROID_BRIDGE_JS = r"""
         return true;
       }
     }
+    if (activeTab === 'viewer' && PV.doc) {
+      document.getElementById('pv-close-btn')?.click();
+      return true;
+    }
     if (activeTab !== 'home') {
       switchTab('home');
       return true;
@@ -333,11 +704,10 @@ ANDROID_BRIDGE_JS = r"""
     });
   }
 
-  // Chunked streaming transfer to native Android (safe for large PDFs & videos)
   async function streamBlobToAndroid(blob, filename, mime, mode) {
     if (window.PexiBridge && window.PexiBridge.beginTransfer) {
       const id = 'tx_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-      const chunkBytes = 384 * 1024; // 384 KB raw -> ~512 KB base64
+      const chunkBytes = 384 * 1024;
       window.PexiBridge.beginTransfer(id, filename || 'pexipdf_output', mime || blob.type || 'application/octet-stream', mode);
       for (let off = 0; off < blob.size; off += chunkBytes) {
         const slice = blob.slice(off, Math.min(blob.size, off + chunkBytes));
@@ -397,6 +767,9 @@ ANDROID_BRIDGE_JS = r"""
       if (verEl) verEl.textContent = 'v' + v;
       if (aboutVerEl) aboutVerEl.textContent = 'Android App · v' + v;
     } catch (_) {}
+    if (window.PexiBridge.onReady) {
+      setTimeout(() => { try { window.PexiBridge.onReady(); } catch (_) {} }, 120);
+    }
   }
   const triggerUpdateCheck = () => {
     if (window.PexiBridge && window.PexiBridge.checkForUpdates) {
@@ -418,23 +791,13 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>PexiPDF by Xcluice — Offline PDF &amp; Media Studio</title>
-<meta name="description" content="Convert JPG, PNG, and WEBP images or existing documents into compressed PDFs instantly. 100% offline, private, and free by Xcluice.">
+<title>PexiPDF by Xcluice — Offline PDF Reader, Scanner &amp; Studio</title>
+<meta name="description" content="Read, scan, merge, and compress PDFs offline. Native Android app-style UI by Xcluice.">
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="theme-color" content="#0A0A0A">
+<meta name="theme-color" content="#0A0A0C">
 <meta name="mobile-web-app-capable" content="yes">
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": "PexiPDF by Xcluice",
-  "url": "https://pexipdf.vercel.app/",
-  "applicationCategory": "UtilitiesApplication"
-}
-</script>
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet" crossorigin="anonymous">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -442,7 +805,7 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet" crossorigin="anonymous">
 
 <style>
-  /* PexiPDF by Xcluice · Native Android App-Style UI (One UI / Material 3) */
+  /* PexiPDF by Xcluice · Native Android App-Style UI + Pro PDF Viewer */
   :root {
     --bg: #F4F4F5;
     --surface: #FFFFFF;
@@ -454,13 +817,13 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
     --muted: #666670;
     --ink: #0B0B0D;
     --on-ink: #FFFFFF;
-    --accent: #2F4ACB;
-    --accent-2: #1D34A3;
-    --accent-soft: rgba(47, 74, 203, 0.10);
-    --red: #C93B3B;
+    --accent: #C81E1E;
+    --accent-2: #991B1B;
+    --accent-soft: rgba(200, 30, 30, 0.10);
+    --red: #C81E1E;
     --green: #25855A;
     --amber: #B87B1F;
-    --bar-bg: rgba(244, 244, 245, 0.86);
+    --bar-bg: rgba(244, 244, 245, 0.88);
     --sheet-scrim: rgba(0, 0, 0, 0.56);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.14);
@@ -483,13 +846,13 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
     --muted: #8E8E98;
     --ink: #F4F4F6;
     --on-ink: #0A0A0C;
-    --accent: #8EA2FF;
-    --accent-2: #B3C1FF;
-    --accent-soft: rgba(142, 162, 255, 0.14);
-    --red: #E8696A;
+    --accent: #E5484D;
+    --accent-2: #F06A6E;
+    --accent-soft: rgba(229, 72, 77, 0.15);
+    --red: #E5484D;
     --green: #4DB887;
     --amber: #E0A84B;
-    --bar-bg: rgba(10, 10, 12, 0.86);
+    --bar-bg: rgba(10, 10, 12, 0.88);
     --sheet-scrim: rgba(0, 0, 0, 0.74);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
     --shadow-md: 0 16px 40px rgba(0, 0, 0, 0.65);
@@ -514,7 +877,7 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
   #aurora::before {
     content: ''; position: absolute; inset: -32px;
     background-image: radial-gradient(circle, var(--border) 1px, transparent 1.4px);
-    background-size: 26px 26px; opacity: 0.55; animation: gridDrift 45s linear infinite;
+    background-size: 26px 26px; opacity: 0.5; animation: gridDrift 45s linear infinite;
     -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 72%);
             mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 72%);
   }
@@ -528,31 +891,32 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
     background: var(--bar-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border); flex-shrink: 0;
   }
-  .app-brand-mark { width: 36px; height: 36px; border-radius: 11px; background: var(--ink); color: var(--on-ink); display: grid; place-items: center; flex-shrink: 0; box-shadow: var(--shadow); }
+  .app-brand-mark { width: 36px; height: 36px; border-radius: 11px; background: #C81E1E; color: #FFFFFF; display: grid; place-items: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(200,30,30,0.28); }
   .app-brand-mark svg { width: 20px; height: 20px; display: block; }
   .topbar-titles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
   .topbar-title-row { display: flex; align-items: baseline; gap: 6px; }
   .header-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; line-height: 1.1; letter-spacing: -0.4px; color: var(--text); }
   .header-title span { color: var(--accent); }
-  .xcluice-tag { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 0.2px; }
+  .xcluice-tag { font-size: 10px; font-weight: 600; color: var(--muted); }
   .header-sub { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; }
   .tagline { display: inline-block; animation: flipIn .45s var(--ease) both; overflow: hidden; text-overflow: ellipsis; }
   @keyframes flipIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 
   .topbar-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-  .top-pill { display: none; align-items: center; gap: 5px; height: 32px; padding: 0 11px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); border: 1px solid transparent; font-size: 11.5px; font-weight: 600; cursor: pointer; transition: transform .2s var(--spring); }
-  .top-pill:active { transform: scale(0.94); }
+  .top-pill { display: none; align-items: center; gap: 5px; height: 32px; padding: 0 11px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); border: none; font-size: 11.5px; font-weight: 600; cursor: pointer; }
   .top-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-  .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--text); display: grid; place-items: center; cursor: pointer; font-size: 15px; transition: transform .25s var(--spring), border-color .2s; }
+  .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--text); display: grid; place-items: center; cursor: pointer; font-size: 15px; transition: transform .2s var(--spring); }
   .icon-btn:active { transform: scale(0.9); }
   .icon-btn svg { width: 17px; height: 17px; }
 
   #app-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: 16px 16px calc(var(--bnav-h) + var(--safe-bot) + 24px); scroll-behavior: smooth; }
   #app-scroll::-webkit-scrollbar { width: 0; height: 0; }
+  body.viewer-mode #app-scroll { padding: 0 0 calc(var(--bnav-h) + var(--safe-bot)); overflow: hidden; display: flex; flex-direction: column; }
 
   .app-screen { display: none; flex-direction: column; gap: 16px; }
-  .app-screen.active { display: flex; animation: screenEnter .32s var(--ease) both; }
-  @keyframes screenEnter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .app-screen.active { display: flex; animation: screenEnter .3s var(--ease) both; }
+  .app-screen[data-screen="viewer"].active { height: 100%; gap: 0; }
+  @keyframes screenEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
   .section-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: -6px; padding: 2px 2px 0; }
   .section-label { font-size: 11.5px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; color: var(--muted); }
@@ -560,7 +924,7 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
   .offline-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: dotPulse 2.4s ease-out infinite; }
   @keyframes dotPulse { 0% { box-shadow: 0 0 0 0 rgba(77, 184, 135, 0.55); } 75%, 100% { box-shadow: 0 0 0 6px rgba(77, 184, 135, 0); } }
 
-  #dropzone.hero-card { position: relative; overflow: hidden; background: var(--ink); color: var(--on-ink); border: 1px solid var(--ink); border-radius: 26px; padding: 22px 20px 20px; min-height: 158px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; cursor: pointer; box-shadow: var(--shadow-md); transition: transform .25s var(--ease); }
+  #dropzone.hero-card { position: relative; overflow: hidden; background: var(--ink); color: var(--on-ink); border: 1px solid var(--ink); border-radius: 26px; padding: 22px 20px 20px; min-height: 154px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; cursor: pointer; box-shadow: var(--shadow-md); transition: transform .25s var(--ease); }
   #dropzone.hero-card:active, #dropzone.hero-card.hover { transform: scale(0.985); }
   #dropzone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 5; }
   .hero-top { display: flex; align-items: flex-start; justify-content: space-between; position: relative; z-index: 2; }
@@ -574,23 +938,15 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
   #dropzone .ring.r2 { animation-delay: 1.5s; }
   @keyframes ring { 0% { transform: scale(.55); opacity: .55; } 100% { transform: scale(2.8); opacity: 0; } }
 
-  #home-workspace-banner { display: none; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--accent); border-radius: 18px; padding: 13px 15px; cursor: pointer; box-shadow: var(--shadow); transition: transform .2s var(--spring); }
-  #home-workspace-banner:active { transform: scale(0.98); }
-  .ws-icon { width: 36px; height: 36px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex-shrink: 0; }
-  .ws-info { flex: 1; min-width: 0; }
-  .ws-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
-  .ws-sub { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
-  .ws-go { font-size: 12px; font-weight: 600; color: var(--accent); white-space: nowrap; }
-
   .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; width: 100%; }
-  .tool { --c1: var(--accent); position: relative; overflow: hidden; border: 1px solid var(--border); border-radius: 22px; padding: 16px 15px; min-height: 116px; color: var(--text); text-align: left; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; background: var(--surface); box-shadow: var(--shadow); transition: transform .22s var(--spring), border-color .2s; }
+  .tool { --c1: var(--accent); position: relative; overflow: hidden; border: 1px solid var(--border); border-radius: 22px; padding: 15px; min-height: 110px; color: var(--text); text-align: left; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; background: var(--surface); box-shadow: var(--shadow); transition: transform .22s var(--spring), border-color .2s; }
   .tool:active { transform: scale(0.96); border-color: var(--border-strong); background: var(--surface-elev); }
   .tool .t-ico-wrap { width: 38px; height: 38px; border-radius: 12px; background: var(--surface-sunken); border: 1px solid var(--border); display: grid; place-items: center; position: relative; color: var(--text); }
   .tool .t-ico-wrap::after { content: ''; position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; border-radius: 50%; background: var(--c1); border: 2px solid var(--surface); }
   .tool .t-ico { width: 19px; height: 19px; display: block; }
   .tool .t-name { font-weight: 600; font-size: 14px; color: var(--text); line-height: 1.2; }
   .tool .t-desc { font-size: 11.5px; color: var(--muted); line-height: 1.3; margin-top: 2px; }
-  .tool-camera { --c1: #2E8B62; } .tool-text { --c1: #C98A2B; } .tool-pdfc { --c1: #2F4ACB; } .tool-vidc { --c1: #C93B3B; }
+  .tool-camera { --c1: #2E8B62; } .tool-text { --c1: #C98A2B; } .tool-pdfc { --c1: #C81E1E; } .tool-vidc { --c1: #5B76F5; }
 
   .marquee { width: 100%; overflow: hidden; padding: 2px 0; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
   .marquee .track { display: flex; gap: 8px; width: max-content; animation: marq 34s linear infinite; }
@@ -599,25 +955,12 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
   .chip:nth-child(3n+2)::before { background: var(--green); } .chip:nth-child(3n+3)::before { background: var(--amber); }
   @keyframes marq { to { transform: translateX(-50%); } }
 
-  .android-group { background: var(--surface); border: 1px solid var(--border); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow); }
-  .tool-row { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; gap: 13px; text-align: left; color: var(--text); cursor: pointer; }
-  .tool-row:last-child { border-bottom: none; }
-  .tool-row:active { background: var(--surface-sunken); }
-  .tr-ico { width: 40px; height: 40px; border-radius: 13px; background: var(--surface-sunken); border: 1px solid var(--border); display: grid; place-items: center; flex-shrink: 0; color: var(--text); position: relative; }
-  .tr-ico svg { width: 19px; height: 19px; }
-  .tr-ico::after { content: ''; position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; border-radius: 50%; background: var(--c1, var(--accent)); border: 2px solid var(--surface); }
-  .tr-body { flex: 1; min-width: 0; }
-  .tr-title { font-size: 14px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 7px; }
-  .tr-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .tr-chev { color: var(--muted); font-size: 18px; line-height: 1; flex-shrink: 0; opacity: 0.7; }
-  .tag-pill { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; padding: 2px 6px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
-
   #est-size-bar { display: none; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); padding: 11px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); }
   #est-size-val { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
 
-  #preview-section { display: none; flex-direction: column; gap: 14px; width: 100%; }
+  #preview-section { display: none; flex-direction: column; gap: 13px; width: 100%; padding-top: 4px; }
   .preview-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-  .pages-title { font-size: 16px; font-weight: 700; color: var(--text); }
+  .pages-title { font-size: 15px; font-weight: 700; color: var(--text); }
   .preview-actions { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 2px; }
   .preview-actions::-webkit-scrollbar { display: none; }
   .clear-btn, .undo-btn, .pill-action { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 12px; font-weight: 600; padding: 8px 13px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
@@ -626,7 +969,7 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
 
   #grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   @media (max-width: 360px) { #grid { grid-template-columns: repeat(2, 1fr); } }
-  .thumb { position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 3 / 4; background: var(--surface); border: 1.5px solid var(--border); cursor: grab; box-shadow: var(--shadow); animation: popIn .38s var(--spring) both; }
+  .thumb { position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 3 / 4; background: var(--surface); border: 1.5px solid var(--border); cursor: grab; box-shadow: var(--shadow); animation: popIn .35s var(--spring) both; }
   @keyframes popIn { from { opacity: 0; transform: scale(0.84); } to { opacity: 1; transform: none; } }
   .thumb.selected-thumb { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
   .thumb.dragging { opacity: 0.4; transform: scale(0.95); }
@@ -661,16 +1004,70 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
   .res-info { flex: 1; min-width: 0; }
   .res-name { font-weight: 700; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .res-size { font-size: 12px; color: var(--green); font-weight: 600; margin-top: 2px; }
-  .result-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  #dl-btn, #share-btn { height: 44px; border-radius: 999px; font-weight: 600; font-size: 13.5px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; text-decoration: none; }
+  .result-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  #dl-btn, #share-btn, #res-read-btn { height: 42px; border-radius: 999px; font-weight: 600; font-size: 12.5px; display: flex; align-items: center; justify-content: center; gap: 5px; cursor: pointer; text-decoration: none; }
   #dl-btn { background: var(--ink); color: var(--on-ink); border: none; }
-  #share-btn { background: var(--surface-sunken); color: var(--text); border: 1px solid var(--border); }
+  #share-btn, #res-read-btn { background: var(--surface-sunken); color: var(--text); border: 1px solid var(--border); }
+  #empty { display: none; }
 
-  #empty { text-align: center; padding: 46px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-  .empty-ico { width: 56px; height: 56px; border-radius: 18px; background: var(--surface-sunken); border: 1px solid var(--border); display: grid; place-items: center; color: var(--muted); }
-  #empty h3 { font-size: 16px; font-weight: 700; color: var(--text); }
-  #empty p { font-size: 12.5px; color: var(--muted); line-height: 1.5; max-width: 260px; }
-  .empty-actions { display: flex; gap: 8px; margin-top: 6px; }
+  /* ---------- PRO PDF VIEWER SCREEN ---------- */
+  #pv-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 18px; text-align: center; gap: 14px; }
+  .pv-hero-drop { position: relative; width: 100%; background: var(--surface); border: 1.5px dashed var(--border-strong); border-radius: 26px; padding: 34px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; box-shadow: var(--shadow); transition: transform .2s var(--spring), border-color .2s; }
+  .pv-hero-drop:active { transform: scale(0.98); border-color: var(--accent); }
+  .pv-hero-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .pv-hero-ico { width: 58px; height: 58px; border-radius: 18px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+  .pv-hero-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; color: var(--text); }
+  .pv-hero-sub { font-size: 12.5px; color: var(--muted); max-width: 280px; line-height: 1.45; }
+  .pv-caps { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; margin-top: 4px; }
+  .pv-cap { font-size: 11px; font-weight: 600; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 5px 11px; border-radius: 999px; }
+
+  #pv-stage { display: none; flex-direction: column; height: 100%; width: 100%; position: relative; overflow: hidden; }
+  .pv-prog-track { height: 2.5px; width: 100%; background: var(--border); flex-shrink: 0; }
+  #pv-prog-fill { height: 100%; width: 0%; background: var(--accent); transition: width .2s var(--ease); }
+  .pv-toolbar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  #pv-title { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #pv-page-pill { background: var(--accent-soft); color: var(--accent); border: none; border-radius: 999px; padding: 5px 10px; font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer; white-space: nowrap; }
+  .pv-tbtn { width: 34px; height: 34px; border-radius: 10px; background: var(--surface-sunken); border: 1px solid var(--border); color: var(--text); display: grid; place-items: center; cursor: pointer; font-size: 14px; flex-shrink: 0; }
+  .pv-tbtn:active { transform: scale(0.92); }
+
+  #pv-search-bar { display: none; align-items: center; gap: 6px; padding: 8px 12px; background: var(--surface-elev); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  #pv-search-input { flex: 1; height: 34px; font-size: 12.5px; border-radius: 10px; }
+  #pv-search-count { font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap; min-width: 54px; text-align: center; }
+
+  #pv-thumbs { display: none; gap: 8px; padding: 10px 12px; overflow-x: auto; background: var(--surface-sunken); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  #pv-thumbs::-webkit-scrollbar { height: 0; }
+  .pv-thumb { display: flex; flex-direction: column; align-items: center; gap: 4px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; padding: 4px; cursor: pointer; flex-shrink: 0; }
+  .pv-thumb.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .pv-thumb canvas { display: block; border-radius: 6px; background: #fff; max-height: 78px; }
+  .pv-thumb span { font-size: 10px; font-weight: 700; color: var(--muted); }
+  .pv-thumb.active span { color: var(--accent); }
+
+  .pv-pages { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; padding: 12px 8px 76px; display: flex; flex-direction: column; align-items: center; gap: 12px; background: var(--surface-sunken); }
+  .pv-page { position: relative; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: filter .25s var(--ease); }
+  .pv-page canvas { display: block; }
+  .pv-skel { color: #777; font-size: 12px; font-weight: 600; padding: 40px 24px; }
+  .pv-pnum { position: absolute; bottom: 8px; right: 8px; background: rgba(10,10,12,.72); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
+  .pv-pages.theme-night .pv-page canvas { filter: invert(0.92) hue-rotate(180deg) contrast(0.95); }
+  .pv-pages.theme-sepia .pv-page canvas { filter: sepia(0.32) brightness(0.96) contrast(0.96); }
+
+  .pv-dock { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 5px 8px; background: var(--bar-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border-strong); border-radius: 999px; box-shadow: var(--shadow-md); z-index: 20; }
+  .pv-dbtn { height: 32px; min-width: 32px; padding: 0 8px; border-radius: 999px; background: transparent; border: none; color: var(--text); font-size: 13px; font-weight: 700; cursor: pointer; display: grid; place-items: center; }
+  .pv-dbtn:active { background: var(--surface-sunken); }
+  #pv-zoom-label { font-size: 11.5px; font-weight: 700; color: var(--accent); min-width: 44px; text-align: center; cursor: pointer; font-variant-numeric: tabular-nums; }
+  .pv-dsep { width: 1px; height: 16px; background: var(--border); margin: 0 2px; }
+
+  .android-group { background: var(--surface); border: 1px solid var(--border); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow); }
+  .tool-row { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; gap: 13px; text-align: left; color: var(--text); cursor: pointer; }
+  .tool-row:last-child { border-bottom: none; }
+  .tool-row:active { background: var(--surface-sunken); }
+  .tr-ico { width: 40px; height: 40px; border-radius: 13px; background: var(--surface-sunken); border: 1px solid var(--border); display: grid; place-items: center; flex-shrink: 0; color: var(--text); position: relative; }
+  .tr-ico svg { width: 19px; height: 19px; }
+  .tr-ico::after { content: ''; position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; border-radius: 50%; background: var(--c1, var(--accent)); border: 2px solid var(--surface); }
+  .tr-body { flex: 1; min-width: 0; }
+  .tr-title { font-size: 14px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 7px; }
+  .tr-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .tr-chev { color: var(--muted); font-size: 18px; line-height: 1; flex-shrink: 0; opacity: 0.7; }
+  .tag-pill { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; padding: 2px 6px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
 
   .pref-group { background: var(--surface); border: 1px solid var(--border); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow); }
   .pref-row { padding: 13px 16px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
@@ -713,7 +1110,6 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
   .bnav-item.active { color: var(--text); }
   .bnav-item.active .bnav-pill { background: var(--accent-soft); color: var(--accent); transform: scale(1.04); }
   .bnav-item:active .bnav-pill { transform: scale(0.92); }
-  .bnav-badge { position: absolute; top: 1px; right: 8px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; background: var(--accent); color: var(--bg); font-size: 10px; font-weight: 700; display: none; align-items: center; justify-content: center; }
 
   .modal-overlay { position: fixed; inset: 0; background: var(--sheet-scrim); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: flex-end; backdrop-filter: blur(4px); }
   @media (min-width: 600px) { .modal-overlay { justify-content: center; padding: 20px; } }
@@ -729,11 +1125,9 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
   .btn-primary { height: 44px; background: var(--ink); color: var(--on-ink); border: none; padding: 0 20px; border-radius: 999px; cursor: pointer; font-weight: 700; font-size: 13.5px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
   .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
 
-  /* Fast Camera Scanner Modal */
   #camera-modal { justify-content: space-between; padding: calc(12px + var(--safe-top)) 12px calc(16px + var(--safe-bot)); background: #000; }
   .cam-top-bar { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px 10px; z-index: 4; }
   .cam-pill-btn { background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.14); color: #fff; font-size: 12.5px; font-weight: 600; padding: 8px 14px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-  .cam-pill-btn:active { transform: scale(0.95); }
   #video-stream { flex: 1; width: 100%; min-height: 0; object-fit: cover; background: #111; border-radius: 22px; }
   .cam-controls { height: 92px; width: 100%; display: flex; align-items: center; justify-content: space-around; margin-top: 10px; flex-shrink: 0; }
   .cam-close { background: rgba(255,255,255,.16); border: none; color: #fff; font-size: 14px; font-weight: 600; padding: 10px 20px; border-radius: 999px; cursor: pointer; }
@@ -829,7 +1223,7 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
   <header class="app-topbar">
     <div class="app-brand-mark" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9.5 13h5M9.5 16.5h3.5"/>
+        <path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 14c1.5-3.2 4.5-3.2 6 0-1.5 1-4.5 1-6 0z"/>
       </svg>
     </div>
     <div class="topbar-titles">
@@ -840,7 +1234,7 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
       <div class="header-sub"><span id="tagline" class="tagline">Images &amp; PDFs to PDF</span></div>
     </div>
     <div class="topbar-actions">
-      <button type="button" class="top-pill" id="top-pages-pill" title="Open Pages Workspace"><span class="dot"></span><span id="top-pages-num">0 pages</span></button>
+      <button type="button" class="top-pill" id="top-pages-pill" title="Jump to Pages"><span class="dot"></span><span id="top-pages-num">0 pages</span></button>
       <button type="button" class="icon-btn" id="theme-toggle" title="Toggle theme">☀</button>
       <button type="button" class="icon-btn" id="about-btn" title="About PexiPDF by Xcluice">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
@@ -864,17 +1258,11 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
         </div>
       </div>
 
-      <div id="home-workspace-banner" class="rip-host" role="button">
-        <div class="ws-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 10h8M8 14h5"/></svg></div>
-        <div class="ws-info"><div class="ws-title" id="home-ws-count">0 pages in workspace</div><div class="ws-sub">Reorder, crop, OCR &amp; export your PDF</div></div>
-        <span class="ws-go">Open ›</span>
-      </div>
-
       <div class="section-row"><span class="section-label">Quick Actions</span></div>
       <div class="tool-grid" id="tool-grid">
         <button type="button" class="tool tool-camera" id="btn-camera">
           <span class="t-ico-wrap"><svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
-          <div><div class="t-name">Camera Scan</div><div class="t-desc">Capture pages live</div></div>
+          <div><div class="t-name">Camera Scan</div><div class="t-desc">Capture pages fast</div></div>
         </button>
         <button type="button" class="tool tool-text" id="btn-text">
           <span class="t-ico-wrap"><svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg></span>
@@ -890,10 +1278,6 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
         </button>
       </div>
 
-      <div class="marquee"><div class="track" id="marq-track"></div></div>
-    </section>
-
-    <section class="app-screen" data-screen="pages">
       <div id="est-size-bar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
         <span>Est. PDF size: <span id="est-size-val">—</span></span>
@@ -924,17 +1308,68 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
             <div class="res-badge-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
             <div class="res-info"><div class="res-name" id="res-name">output.pdf</div><div class="res-size" id="res-size"></div></div>
           </div>
-          <div class="result-btns"><a id="dl-btn">⬇ Save PDF</a><button type="button" id="share-btn">⬆ Share</button></div>
+          <div class="result-btns">
+            <a id="dl-btn">⬇ Save</a>
+            <button type="button" id="res-read-btn">👁 Read</button>
+            <button type="button" id="share-btn">⬆ Share</button>
+          </div>
         </div>
       </div>
 
-      <div id="empty">
-        <div class="empty-ico"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 13h6M12 10v6"/></svg></div>
-        <h3>No pages yet</h3>
-        <p>Add images or PDFs, scan with your camera, or write a formatted note to build your PDF.</p>
-        <div class="empty-actions">
-          <button type="button" class="btn-primary" id="empty-browse-btn">Browse Files</button>
-          <button type="button" class="btn-cancel" id="empty-cam-btn">Camera</button>
+      <div id="empty"></div>
+      <div class="marquee"><div class="track" id="marq-track"></div></div>
+    </section>
+
+    <section class="app-screen" data-screen="viewer">
+      <div id="pv-empty">
+        <div class="pv-hero-drop">
+          <input type="file" id="pv-file-input" accept="application/pdf">
+          <div class="pv-hero-ico">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 13h6M9 17h4"/>
+            </svg>
+          </div>
+          <div class="pv-hero-title">PDF Reader</div>
+          <div class="pv-hero-sub">Tap to open any PDF from your device, or tap any PDF in Files &amp; WhatsApp and choose <b>Open with PexiPDF</b>.</div>
+          <div class="pv-caps">
+            <span class="pv-cap">OLED Night Mode</span>
+            <span class="pv-cap">Warm Sepia</span>
+            <span class="pv-cap">In-PDF Search</span>
+            <span class="pv-cap">Thumbnails</span>
+            <span class="pv-cap">Double-Tap Zoom</span>
+          </div>
+        </div>
+        <button type="button" class="btn-primary" id="pv-open-last" style="display:none;">Open Last Generated PDF</button>
+      </div>
+
+      <div id="pv-stage">
+        <div class="pv-prog-track"><div id="pv-prog-fill"></div></div>
+        <div class="pv-toolbar">
+          <div id="pv-title">document.pdf</div>
+          <button type="button" id="pv-page-pill" title="Jump to page">1 / 1</button>
+          <button type="button" class="pv-tbtn" id="pv-search-btn" title="Search in PDF">🔍</button>
+          <button type="button" class="pv-tbtn" id="pv-thumbs-btn" title="Page thumbnails">⊞</button>
+          <button type="button" class="pv-tbtn" id="pv-theme-btn" title="Reading theme (Original / Night / Sepia)">☀</button>
+          <button type="button" class="pv-tbtn" id="pv-copy-btn" title="Copy current page text">📋</button>
+          <button type="button" class="pv-tbtn" id="pv-close-btn" title="Close PDF">✕</button>
+        </div>
+        <div id="pv-search-bar">
+          <input type="text" id="pv-search-input" placeholder="Search text inside PDF…">
+          <span id="pv-search-count"></span>
+          <button type="button" class="pv-tbtn" id="pv-search-prev">‹</button>
+          <button type="button" class="pv-tbtn" id="pv-search-next">›</button>
+        </div>
+        <div id="pv-thumbs"></div>
+        <div id="pv-pages" class="pv-pages theme-orig mode-scroll"></div>
+        <div class="pv-dock">
+          <button type="button" class="pv-dbtn" id="pv-prev" title="Previous page">‹</button>
+          <button type="button" class="pv-dbtn" id="pv-next" title="Next page">›</button>
+          <span class="pv-dsep"></span>
+          <button type="button" class="pv-dbtn" id="pv-zout" title="Zoom out">−</button>
+          <span id="pv-zoom-label" title="Reset to fit width">100%</span>
+          <button type="button" class="pv-dbtn" id="pv-zin" title="Zoom in">+</button>
+          <span class="pv-dsep"></span>
+          <button type="button" class="pv-dbtn" id="pv-mode-btn" style="font-size:11px;padding:0 10px;">Scroll</button>
         </div>
       </div>
     </section>
@@ -943,7 +1378,7 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
       <div class="section-row"><span class="section-label">PDF Utilities</span></div>
       <div class="android-group" id="tool-grid-more">
         <button type="button" class="tool-row" data-trigger="btn-compress">
-          <span class="tr-ico" style="--c1:#2F4ACB"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></span>
+          <span class="tr-ico" style="--c1:#C81E1E"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></span>
           <span class="tr-body"><span class="tr-title">Compress PDF</span><span class="tr-sub">Light, balanced, or strong offline compression</span></span>
           <span class="tr-chev">›</span>
         </button>
@@ -972,7 +1407,7 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
           <span class="tr-chev">›</span>
         </button>
         <button type="button" class="tool-row" data-trigger="btn-compress-video">
-          <span class="tr-ico" style="--c1:#C93B3B"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4.5-2.5z"/></svg></span>
+          <span class="tr-ico" style="--c1:#C81E1E"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4.5-2.5z"/></svg></span>
           <span class="tr-body"><span class="tr-title">Compress Video</span><span class="tr-sub">Shrink MP4 videos without visible loss</span></span>
           <span class="tr-chev">›</span>
         </button>
@@ -1041,9 +1476,9 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
       <span class="bnav-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5.5v-6.5h-5V21H4a1 1 0 0 1-1-1z"/></svg></span>
       <span class="bnav-label">Home</span>
     </button>
-    <button type="button" class="bnav-item" data-tab="pages" aria-selected="false">
-      <span class="bnav-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span class="bnav-badge" id="nav-pages-badge">0</span></span>
-      <span class="bnav-label">Pages</span>
+    <button type="button" class="bnav-item" data-tab="viewer" aria-selected="false">
+      <span class="bnav-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></span>
+      <span class="bnav-label">Viewer</span>
     </button>
     <button type="button" class="bnav-item" data-tab="tools" aria-selected="false">
       <span class="bnav-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg></span>
@@ -1184,10 +1619,10 @@ NEW_HEAD_AND_BODY = r"""<!DOCTYPE html>
     <div class="sheet-handle"></div>
     <h2>About PexiPDF</h2>
     <div class="about-hero">
-      <div class="app-brand-mark" style="width:48px;height:48px;border-radius:14px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9.5 13h5M9.5 16.5h3.5"/></svg></div>
-      <div><div style="font-size:16px;font-weight:700;">PexiPDF by Xcluice</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Offline PDF Scanner, Converter &amp; Media Studio</div><span class="about-badge" id="about-version-pill">Web App</span></div>
+      <div class="app-brand-mark" style="width:48px;height:48px;border-radius:14px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 14c1.5-3.2 4.5-3.2 6 0-1.5 1-4.5 1-6 0z"/></svg></div>
+      <div><div style="font-size:16px;font-weight:700;">PexiPDF by Xcluice</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Offline PDF Reader, Scanner &amp; Media Studio</div><span class="about-badge" id="about-version-pill">Web App</span></div>
     </div>
-    <div style="font-size:12.5px;color:var(--muted);line-height:1.55;">Every document, photo, and note stays on your device. Built with Xcluice's monochrome design system for fast, private mobile productivity.</div>
+    <div style="font-size:12.5px;color:var(--muted);line-height:1.55;">Every document, photo, and note stays on your device. Built with Xcluice's monochrome design system and pro PDF reader.</div>
     <div class="modal-actions"><button type="button" class="btn-cancel" id="about-update-btn">Check Updates</button><button type="button" class="btn-primary" id="about-close-btn">Done</button></div>
   </div>
 </div>
