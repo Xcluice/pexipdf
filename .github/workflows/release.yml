@@ -50,7 +50,7 @@ jobs:
             git config user.name "Xcluice"
             git config user.email "mohammadmominwani123@gmail.com"
             git add index.html
-            git commit -m "Sync Pro PDF Viewer, Home Pages, and crimson PDF UI to index.html [skip ci]"
+            git commit -m "Sync Material 3 SVG Reader and Device PDF Library to index.html [skip ci]"
             git push origin HEAD:main
           fi
           ls -lh app/src/main/assets
@@ -78,11 +78,9 @@ jobs:
           TAG: ${{ steps.v.outputs.tag }}
         run: |
           NOTES=$(cat << 'EOF'
-          - New Pro PDF Viewer tab replacing Pages: OLED Night mode, Warm Sepia mode, in-PDF text search across all pages, horizontal page thumbnails, double-tap zoom, Scroll/Single-Page mode, reading progress bar, and 1-tap page text copy
-          - Moved Pages workspace directly onto the Home tab with quick Read, Save, and Share buttons after PDF generation
-          - Added Android "Open with PexiPDF" support (ACTION_VIEW & ACTION_SEND) so tapping any PDF in Files, Downloads, or WhatsApp opens straight in PexiPDF Reader
-          - Redesigned custom red PDF-style adaptive app icon (crimson folded document + PDF ribbon emblem)
-          - Fixed slow camera capture, Oreo storage permissions, multi-MIME file picker, and chunked large-file saving
+          - Replaced all PDF Reader emojis with crisp Material 3 vector SVGs (search, thumbnails, Sun/Moon/Sepia theme toggle, copy text, close, zoom, prev/next, Save/Read/Share, and camera controls)
+          - Viewer tab now automatically lists PDFs already on your device (Downloads, Documents, WhatsApp, Telegram) with instant name/folder filter, file size, relative date, refresh button, and 1-tap open
+          - Added Android 8.0–15 storage access flow for scanning all device PDFs
           EOF
           )
           if gh release view "$TAG" >/dev/null 2>&1; then

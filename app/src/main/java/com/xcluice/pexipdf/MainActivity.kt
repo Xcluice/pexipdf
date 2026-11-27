@@ -3,6 +3,7 @@ package com.xcluice.pexipdf
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -16,6 +17,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.provider.Settings
 import android.util.Base64
 import android.view.ViewGroup
 import android.webkit.*
@@ -41,6 +43,7 @@ import androidx.webkit.WebViewAssetLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -51,6 +54,7 @@ class MainActivity : ComponentActivity() {
 
     private var webView: WebView? = null
     private var webReady = false
+    private var refreshPdfsOnResume = false
     private var pendingExternalPdfUri: Uri? = null
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private var pendingCameraPermissionRequest: PermissionRequest? = null
@@ -108,6 +112,12 @@ class MainActivity : ComponentActivity() {
             if (granted) launchSystemCamera()
             else Toast.makeText(this, "Camera permission required", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private val readPermLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        queryAndPushDevicePdfs()
     }
 
     private val storagePermLauncher = registerForActivityResult(
@@ -191,6 +201,115 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun hasFullPdfListAccess(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Environment.isExternalStorageManager()
+        } else {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun queryAndPushDevicePdfs() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val seen = HashSet<String>()
+            val list = mutableListOf<JSONObject>()
+
+            // 1. MediaStore.Files query for PDFs
+            runCatching {
+                val collection = MediaStore.Files.getContentUri("external")
+                val cols = mutableListOf(
+                    MediaStore.Files.FileColumns._ID,
+                    MediaStore.Files.FileColumns.DISPLAY_NAME,
+                    MediaStore.Files.FileColumns.SIZE,
+                    MediaStore.Files.FileColumns.DATE_MODIFIED
+                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    cols.add(MediaStore.Files.FileColumns.RELATIVE_PATH)
+                }
+                val sel = "${MediaStore.Files.FileColumns.MIME_TYPE} = ? OR ${MediaStore.Files.FileColumns.DISPLAY_NAME} LIKE ?"
+                val args = arrayOf("application/pdf", "%.pdf")
+                val sort = "${MediaStore.Files.FileColumns.DATE_MODIFIED} DESC"
+                contentResolver.query(collection, cols.toTypedArray(), sel, args, sort)?.use { c ->
+                    val idCol = c.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
+                    val nameCol = c.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME)
+                    val sizeCol = c.getColumnIndex(MediaStore.Files.FileColumns.SIZE)
+                    val modCol = c.getColumnIndex(MediaStore.Files.FileColumns.DATE_MODIFIED)
+                    val relCol = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        c.getColumnIndex(MediaStore.Files.FileColumns.RELATIVE_PATH)
+                    } else -1
+
+                    while (c.moveToNext() && list.size < 150) {
+                        val id = c.getLong(idCol)
+                        val name = if (nameCol >= 0) c.getString(nameCol) else null
+                        if (name.isNullOrBlank()) continue
+                        val size = if (sizeCol >= 0) c.getLong(sizeCol) else 0L
+                        val mod = if (modCol >= 0) c.getLong(modCol) else 0L
+                        val rel = if (relCol >= 0) (c.getString(relCol) ?: "") else ""
+                        val folder = rel.trim('/').substringAfterLast('/', "").ifBlank { "Device" }
+                        val key = "${name.lowercase()}_$size"
+                        if (!seen.add(key)) continue
+                        val uri = ContentUris.withAppendedId(collection, id).toString()
+                        list.add(
+                            JSONObject()
+                                .put("uri", uri)
+                                .put("name", name)
+                                .put("size", size)
+                                .put("modified", mod)
+                                .put("folder", folder)
+                        )
+                    }
+                }
+            }
+
+            // 2. Direct scan of common folders if full storage access is granted
+            if (hasFullPdfListAccess()) {
+                val ext = Environment.getExternalStorageDirectory()
+                val dirs = listOf(
+                    File(ext, "Download"),
+                    File(ext, "Download/PexiPDF"),
+                    File(ext, "Documents"),
+                    File(ext, "WhatsApp/Media/WhatsApp Documents"),
+                    File(ext, "Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Documents"),
+                    File(ext, "Telegram/Telegram Documents")
+                )
+                for (d in dirs) {
+                    if (!d.exists() || !d.isDirectory) continue
+                    d.listFiles()?.forEach { f ->
+                        if (f.isFile && f.name.endsWith(".pdf", ignoreCase = true) && list.size < 200) {
+                            val key = "${f.name.lowercase()}_${f.length()}"
+                            if (seen.add(key)) {
+                                list.add(
+                                    JSONObject()
+                                        .put("uri", Uri.fromFile(f).toString())
+                                        .put("name", f.name)
+                                        .put("size", f.length())
+                                        .put("modified", f.lastModified() / 1000L)
+                                        .put("folder", d.name)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            list.sortByDescending { it.optLong("modified", 0L) }
+            val arr = JSONArray()
+            list.take(150).forEach { arr.put(it) }
+            val payload = JSONObject()
+                .put("needsPermission", !hasFullPdfListAccess())
+                .put("items", arr)
+                .toString()
+            val quoted = JSONObject.quote(payload)
+            withContext(Dispatchers.Main) {
+                webView?.evaluateJavascript(
+                    "window.__pexiOnDevicePdfs && window.__pexiOnDevicePdfs($quoted)",
+                    null
+                )
+            }
+        }
+    }
+
     private fun extractPdfUri(intent: Intent?): Uri? {
         if (intent == null) return null
         return when (intent.action) {
@@ -204,6 +323,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun queryDisplayName(uri: Uri): String {
+        if (uri.scheme == "file") {
+            return File(uri.path ?: "").name.ifBlank { "document.pdf" }
+        }
         var name: String? = null
         runCatching {
             contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
@@ -227,7 +349,13 @@ class MainActivity : ComponentActivity() {
                         null
                     )
                 }
-                contentResolver.openInputStream(uri)?.use { input ->
+                val inputStream = if (uri.scheme == "file") {
+                    File(uri.path ?: "").inputStream()
+                } else {
+                    contentResolver.openInputStream(uri)
+                } ?: throw IllegalStateException("Cannot read PDF")
+
+                inputStream.use { input ->
                     val buf = ByteArray(256 * 1024)
                     while (true) {
                         val n = input.read(buf)
@@ -240,7 +368,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
-                } ?: throw IllegalStateException("Cannot read PDF")
+                }
                 withContext(Dispatchers.Main) {
                     webView?.evaluateJavascript(
                         "window.__pexiExternalPdfEnd && window.__pexiExternalPdfEnd()",
@@ -452,6 +580,10 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         webView?.onResume()
+        if (refreshPdfsOnResume) {
+            refreshPdfsOnResume = false
+            queryAndPushDevicePdfs()
+        }
     }
 
     override fun onDestroy() {
@@ -560,6 +692,38 @@ class MainActivity : ComponentActivity() {
                     streamExternalPdfToViewer(pending)
                 }
             }
+        }
+
+        @JavascriptInterface
+        fun listDevicePdfs() {
+            queryAndPushDevicePdfs()
+        }
+
+        @JavascriptInterface
+        fun requestPdfListPermission() {
+            runOnUiThread {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    refreshPdfsOnResume = true
+                    try {
+                        startActivity(
+                            Intent(
+                                Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                                Uri.parse("package:$packageName")
+                            )
+                        )
+                    } catch (_: Exception) {
+                        startActivity(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
+                    }
+                } else {
+                    readPermLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun openPdfUri(uriString: String) {
+            if (uriString.isBlank()) return
+            streamExternalPdfToViewer(Uri.parse(uriString))
         }
 
         @JavascriptInterface
