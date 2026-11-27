@@ -267,18 +267,42 @@
   .pv-perm-sub { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
   #pv-perm-btn { height: 34px; padding: 0 14px; border-radius: 999px; background: var(--accent); color: #fff; border: none; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
 
+  .pv-dev-head-actions { display: flex; align-items: center; gap: 6px; }
+  #pv-sort-btn { height: 34px; padding: 0 11px; border-radius: 10px; background: var(--surface-sunken); border: 1px solid var(--border); color: var(--text); font-size: 11.5px; font-weight: 600; cursor: pointer; transition: transform .16s var(--spring); }
+  #pv-sort-btn:active { transform: scale(0.92); }
+
   #pv-device-list { background: var(--surface); border: 1px solid var(--border); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow); }
-  .pv-dev-row { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border); padding: 12px 14px; display: flex; align-items: center; gap: 12px; text-align: left; color: var(--text); cursor: pointer; transition: transform .16s var(--spring), background .16s; }
+  .pv-dev-row { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 12px; text-align: left; color: var(--text); cursor: pointer; transition: transform .16s var(--spring), background .16s; }
   .pv-dev-row:last-child { border-bottom: none; }
   .pv-dev-row:active { background: var(--surface-sunken); transform: scale(0.982); }
-  .pv-dev-ico { width: 38px; height: 38px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex-shrink: 0; }
-  .pv-dev-ico svg { width: 18px; height: 18px; }
-  .pv-dev-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+  .pv-dev-thumb { position: relative; width: 44px; height: 58px; border-radius: 9px; background: var(--surface-sunken); border: 1px solid var(--border); color: var(--accent); display: grid; place-items: center; flex-shrink: 0; overflow: hidden; }
+  .pv-dev-thumb .pv-dev-fallback { width: 20px; height: 20px; opacity: 0.85; transition: opacity .2s; }
+  .pv-dev-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; background: #fff; opacity: 0; transition: opacity .24s var(--ease); }
+  .pv-dev-thumb.has-img img { opacity: 1; }
+  .pv-dev-thumb.has-img .pv-dev-fallback { opacity: 0; }
+  .pv-dev-thumb.is-locked { background: var(--accent-soft); }
+  .pv-dev-pg { position: absolute; bottom: 3px; right: 3px; font-size: 9px; font-weight: 700; line-height: 1; padding: 2px 5px; border-radius: 5px; background: rgba(10,10,12,0.78); color: #fff; backdrop-filter: blur(4px); font-variant-numeric: tabular-nums; }
+
+  #pv-device-list.is-grid { background: transparent; border: none; box-shadow: none; overflow: visible; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  #pv-device-list.is-grid .pv-dev-row { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); }
+  #pv-device-list.is-grid .pv-dev-thumb { width: 100%; height: 148px; border-radius: 12px; }
+  #pv-device-list.is-grid .pv-dev-thumb .pv-dev-fallback { width: 32px; height: 32px; }
+  #pv-device-list.is-grid .pv-dev-pg { bottom: 6px; right: 6px; font-size: 10px; padding: 3px 7px; border-radius: 999px; }
+  #pv-device-list.is-grid .pv-dev-chev { display: none; }
+  #pv-device-list.is-grid .pv-dev-empty { grid-column: 1 / -1; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; }
+
+  .pv-dev-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
   .pv-dev-name { font-size: 13.5px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .pv-dev-meta { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pv-dev-meta { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
+  .pv-dev-resume { display: inline-flex; align-items: center; font-size: 10px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 1px 6px; border-radius: 999px; margin-left: 4px; flex-shrink: 0; }
   .pv-dev-chev { color: var(--muted); display: grid; place-items: center; flex-shrink: 0; opacity: 0.65; }
   .pv-dev-chev svg { width: 16px; height: 16px; }
   .pv-dev-empty { padding: 24px 16px; text-align: center; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+
+  #pv-stage .pv-toolbar, #pv-stage .pv-dock { transition: transform .28s var(--ease), opacity .24s var(--ease); }
+  #pv-stage.pv-immersive .pv-toolbar { transform: translateY(-100%); opacity: 0; pointer-events: none; position: absolute; top: 0; left: 0; right: 0; z-index: 25; }
+  #pv-stage.pv-immersive .pv-dock { transform: translate(-50%, 90px); opacity: 0; pointer-events: none; }
 
   #pv-stage { display: none; flex-direction: column; height: 100%; width: 100%; position: relative; overflow: hidden; }
   .pv-prog-track { height: 2.5px; width: 100%; background: var(--border); flex-shrink: 0; }
@@ -666,9 +690,15 @@
               <span class="section-label">On this device</span>
               <span id="pv-device-count"></span>
             </div>
-            <button type="button" class="pv-tbtn" id="pv-refresh-btn" title="Refresh PDF list" aria-label="Refresh">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-            </button>
+            <div class="pv-dev-head-actions">
+              <button type="button" id="pv-sort-btn" title="Sort PDFs">Recent</button>
+              <button type="button" class="pv-tbtn" id="pv-view-btn" title="Toggle grid/list view" aria-label="Toggle view">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+              </button>
+              <button type="button" class="pv-tbtn" id="pv-refresh-btn" title="Refresh PDF list" aria-label="Refresh">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              </button>
+            </div>
           </div>
           <div class="pv-filter-row">
             <div class="pv-filter-wrap">
@@ -696,6 +726,9 @@
           </button>
           <button type="button" class="pv-tbtn" id="pv-copy-btn" title="Copy current page text" aria-label="Copy text">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+          <button type="button" class="pv-tbtn" id="pv-share-btn" title="Share PDF" aria-label="Share PDF">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           </button>
           <button type="button" class="pv-tbtn" id="pv-close-btn" title="Close PDF" aria-label="Close">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -727,6 +760,10 @@
           <span id="pv-zoom-label" title="Reset to fit width">100%</span>
           <button type="button" class="pv-dbtn" id="pv-zin" title="Zoom in" aria-label="Zoom in">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <span class="pv-dsep"></span>
+          <button type="button" class="pv-dbtn" id="pv-rot-btn" title="Rotate 90°" aria-label="Rotate">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           </button>
           <span class="pv-dsep"></span>
           <button type="button" class="pv-dbtn" id="pv-mode-btn" style="font-size:11px;padding:0 10px;">Scroll</button>
@@ -924,7 +961,7 @@
     <div class="modal-sub">Shrink an existing PDF directly on your device.</div>
     <div id="compress-empty-state"><div id="compress-drop"><input type="file" id="compress-file-input" accept="application/pdf"><div class="drop-title">Tap to pick a PDF</div><div class="drop-sub">100% offline · nothing leaves your device</div></div></div>
     <div id="compress-file-state" style="display:none;flex-direction:column;gap:14px;">
-      <div class="compress-file-row"><span class="compress-file-icon">📄</span><div class="compress-file-info"><div class="compress-file-name" id="compress-file-name">document.pdf</div><div class="compress-file-size" id="compress-file-size">0 KB</div></div><button type="button" class="compress-remove" id="compress-remove-btn">✕</button></div>
+      <div class="compress-file-row"><span class="compress-file-icon" style="display:grid;place-items:center;color:var(--accent);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15h6M9 11h3"/></svg></span><div class="compress-file-info"><div class="compress-file-name" id="compress-file-name">document.pdf</div><div class="compress-file-size" id="compress-file-size">0 KB</div></div><button type="button" class="compress-remove" id="compress-remove-btn">✕</button></div>
       <div><div class="setting-label" style="margin-bottom:8px;">Compression level</div><div class="compress-level-row"><div class="compress-level-btn" data-level="light"><div class="lvl-name">Light</div><div class="lvl-desc">Best quality</div></div><div class="compress-level-btn active" data-level="balanced"><div class="lvl-name">Balanced</div><div class="lvl-desc">~50% smaller</div></div><div class="compress-level-btn" data-level="strong"><div class="lvl-name">Strong</div><div class="lvl-desc">Smallest</div></div></div></div>
       <button type="button" class="btn-primary" id="compress-run-btn" style="width:100%;">Compress PDF</button>
       <div id="compress-progress" style="display:none;"><div class="prog-track"><div id="compress-prog-bar" style="height:100%;background:var(--accent);width:0%;border-radius:999px;"></div></div><div id="compress-prog-label" style="font-size:11.5px;color:var(--muted);margin-top:6px;text-align:center;">Compressing…</div></div>
@@ -944,7 +981,7 @@
     <div class="modal-sub">Re-encode video smaller on-device without visible quality loss.</div>
     <div id="compress-video-empty-state"><div id="compress-video-drop"><input type="file" id="compress-video-file-input" accept="video/*"><div class="drop-title">Tap to pick a video</div><div class="drop-sub">Runs locally · nothing is uploaded</div></div></div>
     <div id="compress-video-file-state" style="display:none;flex-direction:column;gap:14px;">
-      <div class="compress-file-row"><span class="compress-file-icon">🎥</span><div class="compress-file-info"><div class="compress-file-name" id="compress-video-file-name">video.mp4</div><div class="compress-file-size" id="compress-video-file-size">0 KB</div></div><button type="button" class="compress-remove" id="compress-video-remove-btn">✕</button></div>
+      <div class="compress-file-row"><span class="compress-file-icon" style="display:grid;place-items:center;color:var(--accent);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4.5-2.5z"/></svg></span><div class="compress-file-info"><div class="compress-file-name" id="compress-video-file-name">video.mp4</div><div class="compress-file-size" id="compress-video-file-size">0 KB</div></div><button type="button" class="compress-remove" id="compress-video-remove-btn">✕</button></div>
       <div><div class="setting-label" style="margin-bottom:8px;">Compression level</div><div class="compress-level-row"><div class="compress-level-btn compress-video-level-btn" data-level="light"><div class="lvl-name">Light</div><div class="lvl-desc">Lossless look</div></div><div class="compress-level-btn compress-video-level-btn active" data-level="balanced"><div class="lvl-name">Balanced</div><div class="lvl-desc">Big savings</div></div><div class="compress-level-btn compress-video-level-btn" data-level="strong"><div class="lvl-name">Strong</div><div class="lvl-desc">Smallest</div></div></div></div>
       <div style="font-size:11px;color:var(--muted);line-height:1.45;">First run downloads the local video engine (~25 MB, cached after that).</div>
       <button type="button" class="btn-primary" id="compress-video-run-btn" style="width:100%;">Compress Video</button>
@@ -963,15 +1000,44 @@
     <div class="sheet-handle"></div>
     <h2 id="gt-title">Tool</h2>
     <div class="modal-sub" id="gt-sub"></div>
-    <div id="gt-empty"><div class="gt-drop" id="gt-drop"><input type="file" id="gt-input"><div class="drop-icon" id="gt-ico" style="background:var(--surface);color:var(--text);border-color:var(--border);width:44px;height:44px;font-size:20px;">📄</div><div class="drop-title">Tap to pick a file</div><div class="drop-sub">Runs locally on your device · nothing is uploaded</div></div></div>
+    <div id="gt-empty"><div class="gt-drop" id="gt-drop"><input type="file" id="gt-input"><div class="drop-icon" id="gt-ico" style="background:var(--surface);color:var(--text);border-color:var(--border);width:44px;height:44px;display:grid;place-items:center;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15h6M9 11h3"/></svg></div><div class="drop-title">Tap to pick a file</div><div class="drop-sub">Runs locally on your device · nothing is uploaded</div></div></div>
     <div id="gt-file" style="display:none;flex-direction:column;gap:14px;">
-      <div class="compress-file-row"><span class="compress-file-icon" id="gt-file-ico">📄</span><div class="compress-file-info"><div class="compress-file-name" id="gt-file-name">file</div><div class="compress-file-size" id="gt-file-size"></div></div><button type="button" class="compress-remove" id="gt-remove">✕</button></div>
+      <div class="compress-file-row"><span class="compress-file-icon" id="gt-file-ico" style="display:grid;place-items:center;color:var(--accent);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15h6M9 11h3"/></svg></span><div class="compress-file-info"><div class="compress-file-name" id="gt-file-name">file</div><div class="compress-file-size" id="gt-file-size"></div></div><button type="button" class="compress-remove" id="gt-remove">✕</button></div>
       <div id="gt-opts" style="display:flex;flex-direction:column;gap:12px;"></div>
       <button type="button" class="btn-primary" id="gt-run" style="width:100%;">Run</button>
       <div id="gt-progress" style="display:none;"><div class="prog-track"><div id="gt-bar" style="height:100%;width:0%;background:var(--accent);border-radius:999px;"></div></div><div id="gt-label" style="font-size:11.5px;color:var(--muted);margin-top:6px;text-align:center;">Working…</div></div>
       <div id="gt-res"><div class="big-num" id="gt-res-num">0 KB</div><div class="lbl" id="gt-res-lbl">Output size</div><div class="modal-actions" style="justify-content:stretch;"><a id="gt-dl" class="btn-primary" style="text-decoration:none;flex:1;">Save Output</a></div></div>
     </div>
     <div class="modal-actions"><button type="button" class="btn-cancel" id="gt-close">Close</button></div>
+  </div>
+</div>
+
+<div id="pv-jump-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="sheet-handle"></div>
+    <h2>Go to Page</h2>
+    <div class="modal-sub" id="pv-jump-sub">Enter a page number</div>
+    <input type="number" id="pv-jump-input" class="modal-name-input" inputmode="numeric" min="1" placeholder="1">
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" id="pv-jump-first">First</button>
+      <button type="button" class="btn-cancel" id="pv-jump-last" style="margin-right:auto;">Last</button>
+      <button type="button" class="btn-cancel" id="pv-jump-cancel">Cancel</button>
+      <button type="button" class="btn-primary" id="pv-jump-go">Jump</button>
+    </div>
+  </div>
+</div>
+
+<div id="pv-pass-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="sheet-handle"></div>
+    <h2>Password-Protected PDF</h2>
+    <div class="modal-sub">Enter the password to unlock and read this document locally.</div>
+    <input type="password" id="pv-pass-input" class="modal-name-input" placeholder="Document password" autocomplete="off">
+    <div id="pv-pass-err" style="font-size:11.5px;color:var(--accent);min-height:16px;margin-top:-6px;"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" id="pv-pass-cancel">Cancel</button>
+      <button type="button" class="btn-primary" id="pv-pass-unlock">Unlock</button>
+    </div>
   </div>
 </div>
 
@@ -2528,6 +2594,8 @@ $('gt-run').addEventListener('click', async () => {
       else if (overlay.id === 'compress-video-modal') document.getElementById('compress-video-close-btn')?.click();
       else if (overlay.id === 'gt-modal') document.getElementById('gt-close')?.click();
       else if (overlay.id === 'about-modal') closeAbout();
+      else if (overlay.id === 'pv-jump-modal') overlay.classList.remove('open');
+      else if (overlay.id === 'pv-pass-modal') { overlay.classList.remove('open'); pendingLockedPdf = null; }
     });
   });
 
@@ -2552,32 +2620,147 @@ $('gt-run').addEventListener('click', async () => {
     return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
+  const pdfThumbCache = new Map();
+  const pdfThumbRequested = new Set();
+  let pdfThumbIO = null;
+  let pvViewMode = localStorage.getItem('pexi_pv_view') || 'list';
+  let pvSortMode = localStorage.getItem('pexi_pv_sort') || 'recent';
+  const pvViewBtn = document.getElementById('pv-view-btn');
+  const pvSortBtn = document.getElementById('pv-sort-btn');
+
+  function getReadPositions() {
+    try { return JSON.parse(localStorage.getItem('pexi_read_pos') || '{}') || {}; } catch (_) { return {}; }
+  }
+  function saveReadPosition(name, size, page, total) {
+    if (!name || !page || page < 1) return;
+    try {
+      const map = getReadPositions();
+      const k = name.toLowerCase() + '_' + (size || 0);
+      map[k] = { page, total: total || 0, ts: Date.now() };
+      const keys = Object.keys(map);
+      if (keys.length > 80) {
+        keys.sort((a, b) => (map[a].ts || 0) - (map[b].ts || 0)).slice(0, keys.length - 80).forEach(dk => delete map[dk]);
+      }
+      localStorage.setItem('pexi_read_pos', JSON.stringify(map));
+    } catch (_) {}
+  }
+  function getSavedPage(name, size) {
+    const map = getReadPositions();
+    const hit = map[(name || '').toLowerCase() + '_' + (size || 0)];
+    return hit && hit.page > 1 ? hit.page : 0;
+  }
+
+  function pdfItemKey(p) {
+    return `${(p.name || '').toLowerCase()}_${p.size || 0}_${p.modified || 0}`;
+  }
+
+  function syncViewSortUi() {
+    if (pvViewBtn) {
+      pvViewBtn.innerHTML = pvViewMode === 'grid'
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
+      pvViewBtn.title = pvViewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view';
+    }
+    if (pvSortBtn) {
+      const labels = { recent: 'Recent', name: 'A–Z', size: 'Size' };
+      pvSortBtn.textContent = labels[pvSortMode] || 'Recent';
+    }
+  }
+  syncViewSortUi();
+
+  pvViewBtn?.addEventListener('click', () => {
+    pvViewMode = pvViewMode === 'list' ? 'grid' : 'list';
+    localStorage.setItem('pexi_pv_view', pvViewMode);
+    syncViewSortUi();
+    renderDevicePdfList();
+  });
+  pvSortBtn?.addEventListener('click', () => {
+    const order = ['recent', 'name', 'size'];
+    pvSortMode = order[(order.indexOf(pvSortMode) + 1) % order.length];
+    localStorage.setItem('pexi_pv_sort', pvSortMode);
+    syncViewSortUi();
+    renderDevicePdfList();
+  });
+
+  function applyThumbToEl(el, cached) {
+    if (!el || !cached) return;
+    const frame = el.querySelector('.pv-dev-thumb');
+    const pgEl = el.querySelector('.pv-dev-pg');
+    if (cached.url && frame) {
+      let img = frame.querySelector('img');
+      if (!img) {
+        img = document.createElement('img');
+        img.alt = '';
+        frame.appendChild(img);
+      }
+      if (img.src !== cached.url) img.src = cached.url;
+      frame.classList.add('has-img');
+    } else if (cached.pages === -2 && frame) {
+      frame.classList.add('is-locked');
+    }
+    if (pgEl) {
+      if (cached.pages > 0) {
+        pgEl.textContent = `${cached.pages} pg`;
+        pgEl.style.display = 'inline-flex';
+      } else if (cached.pages === -2) {
+        pgEl.textContent = 'Locked';
+        pgEl.style.display = 'inline-flex';
+      }
+    }
+  }
+
+  window.__pexiOnPdfThumb = function (key, dataUrl, pageCount) {
+    const rec = { url: dataUrl || '', pages: typeof pageCount === 'number' ? pageCount : 0 };
+    pdfThumbCache.set(key, rec);
+    if (!pvDevList) return;
+    pvDevList.querySelectorAll('.pv-dev-row').forEach(el => {
+      if (el.dataset.key === key) applyThumbToEl(el, rec);
+    });
+  };
+
   function renderDevicePdfList() {
     if (!pvDevList) return;
+    if (pdfThumbIO) { pdfThumbIO.disconnect(); pdfThumbIO = null; }
     const q = (pvDevFilter?.value || '').trim().toLowerCase();
-    const filtered = q ? devicePdfs.filter(p => (p.name || '').toLowerCase().includes(q) || (p.folder || '').toLowerCase().includes(q)) : devicePdfs;
+    let filtered = q ? devicePdfs.filter(p => (p.name || '').toLowerCase().includes(q) || (p.folder || '').toLowerCase().includes(q)) : devicePdfs.slice();
+    if (pvSortMode === 'name') filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    else if (pvSortMode === 'size') filtered.sort((a, b) => (b.size || 0) - (a.size || 0));
+    else filtered.sort((a, b) => (b.modified || 0) - (a.modified || 0));
+
+    pvDevList.classList.toggle('is-grid', pvViewMode === 'grid');
     if (pvDevCount) pvDevCount.textContent = filtered.length ? `${filtered.length} PDF${filtered.length === 1 ? '' : 's'}` : '';
     if (!filtered.length) {
       pvDevList.innerHTML = `<div class="pv-dev-empty">${q ? 'No matching PDFs found.' : 'No PDFs found on device yet. Tap Browse PDF above or allow storage access.'}</div>`;
       return;
     }
-    pvDevList.innerHTML = filtered.map((p, idx) => `
-      <button type="button" class="pv-dev-row" data-idx="${idx}">
-        <span class="pv-dev-ico" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    const readPos = getReadPositions();
+    pvDevList.innerHTML = filtered.map((p, idx) => {
+      const key = pdfItemKey(p);
+      const cached = pdfThumbCache.get(key);
+      const saved = readPos[(p.name || '').toLowerCase() + '_' + (p.size || 0)];
+      const resumeBadge = saved && saved.page > 1 ? `<span class="pv-dev-resume">Pg ${saved.page}</span>` : '';
+      const pgText = cached && cached.pages > 0 ? `${cached.pages} pg` : (cached && cached.pages === -2 ? 'Locked' : '');
+      return `
+      <button type="button" class="pv-dev-row" data-idx="${idx}" data-key="${escHtml(key)}" data-uri="${escHtml(p.uri || '')}">
+        <span class="pv-dev-thumb${cached && cached.url ? ' has-img' : ''}${cached && cached.pages === -2 ? ' is-locked' : ''}" aria-hidden="true">
+          <svg class="pv-dev-fallback" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15h6M9 11h3"/>
           </svg>
+          ${cached && cached.url ? `<img src="${cached.url}" alt="">` : ''}
+          <span class="pv-dev-pg" style="${pgText ? 'display:inline-flex;' : 'display:none;'}">${escHtml(pgText)}</span>
         </span>
         <span class="pv-dev-body">
           <span class="pv-dev-name">${escHtml(p.name)}</span>
-          <span class="pv-dev-meta">${escHtml(formatBytes(p.size || 0))}${p.folder ? ' · ' + escHtml(p.folder) : ''}${p.modified ? ' · ' + fmtRelDate(p.modified) : ''}</span>
+          <span class="pv-dev-meta">${escHtml(formatBytes(p.size || 0))}${p.folder ? ' · ' + escHtml(p.folder) : ''}${p.modified ? ' · ' + fmtRelDate(p.modified) : ''}${resumeBadge}</span>
         </span>
         <span class="pv-dev-chev" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </span>
-      </button>
-    `).join('');
-    pvDevList.querySelectorAll('.pv-dev-row').forEach(btn => {
+      </button>`;
+    }).join('');
+
+    const rows = pvDevList.querySelectorAll('.pv-dev-row');
+    rows.forEach(btn => {
       btn.addEventListener('click', () => {
         const item = filtered[parseInt(btn.dataset.idx, 10)];
         if (item && window.PexiBridge && window.PexiBridge.openPdfUri) {
@@ -2585,6 +2768,26 @@ $('gt-run').addEventListener('click', async () => {
         }
       });
     });
+
+    if (window.PexiBridge && window.PexiBridge.requestPdfThumbnail) {
+      pdfThumbIO = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          if (!en.isIntersecting) return;
+          const el = en.target;
+          const key = el.dataset.key;
+          const uri = el.dataset.uri;
+          pdfThumbIO.unobserve(el);
+          if (!key || !uri) return;
+          const cached = pdfThumbCache.get(key);
+          if (cached) { applyThumbToEl(el, cached); return; }
+          if (!pdfThumbRequested.has(key)) {
+            pdfThumbRequested.add(key);
+            try { window.PexiBridge.requestPdfThumbnail(uri, key); } catch (_) {}
+          }
+        });
+      }, { rootMargin: '260px 0px' });
+      rows.forEach(r => pdfThumbIO.observe(r));
+    }
   }
 
   function refreshDevicePdfs() {
@@ -2623,6 +2826,7 @@ $('gt-run').addEventListener('click', async () => {
     numPages: 0,
     curPage: 1,
     zoom: 1.0,
+    rotation: 0,
     mode: 'scroll',
     theme: 'orig',
     rendered: new Set(),
@@ -2656,6 +2860,7 @@ $('gt-run').addEventListener('click', async () => {
     pvThumbs.querySelectorAll('.pv-thumb').forEach(t => {
       t.classList.toggle('active', parseInt(t.dataset.p, 10) === PV.curPage);
     });
+    if (PV.name && PV.rawBytes) saveReadPosition(PV.name, PV.rawBytes.length, PV.curPage, PV.numPages);
   }
 
   async function pvRenderPage(pNum) {
@@ -2665,12 +2870,13 @@ $('gt-run').addEventListener('click', async () => {
     PV.rendering.add(pNum);
     try {
       const page = await PV.doc.getPage(pNum);
-      const baseVp = page.getViewport({ scale: 1 });
+      const rot = ((page.rotate || 0) + PV.rotation) % 360;
+      const baseVp = page.getViewport({ scale: 1, rotation: rot });
       const availW = Math.max(260, pvPages.clientWidth - 16);
       const fitScale = availW / baseVp.width;
       const cssScale = fitScale * PV.zoom;
       const dpr = Math.min(window.devicePixelRatio || 1, 2.2);
-      const vp = page.getViewport({ scale: cssScale * dpr });
+      const vp = page.getViewport({ scale: cssScale * dpr, rotation: rot });
 
       let canvas = slot.querySelector('canvas');
       if (!canvas) {
@@ -2783,25 +2989,38 @@ $('gt-run').addEventListener('click', async () => {
     }
   }
 
-  async function pvOpenBytes(uint8, filename) {
+  let pendingLockedPdf = null;
+  const pvPassModal = document.getElementById('pv-pass-modal');
+  const pvPassInput = document.getElementById('pv-pass-input');
+  const pvPassErr = document.getElementById('pv-pass-err');
+
+  async function pvOpenBytes(uint8, filename, password) {
     if (!window['pdfjs-dist/build/pdf']) {
       showToast('PDF engine still loading…');
       return;
     }
     try {
-      showToast('Opening PDF…', 1200);
+      if (!password) showToast('Opening PDF…', 1200);
       const pdfjs = window['pdfjs-dist/build/pdf'];
-      const doc = await pdfjs.getDocument({ data: uint8.slice() }).promise;
+      const opts = { data: uint8.slice() };
+      if (password) opts.password = password;
+      const doc = await pdfjs.getDocument(opts).promise;
+      if (pvPassModal) pvPassModal.classList.remove('open');
+      pendingLockedPdf = null;
+
       PV.doc = doc;
       PV.rawBytes = uint8;
       PV.name = filename || 'document.pdf';
       PV.numPages = doc.numPages;
-      PV.curPage = 1;
+      const resumed = getSavedPage(PV.name, uint8.length);
+      PV.curPage = (resumed > 1 && resumed <= doc.numPages) ? resumed : 1;
       PV.zoom = 1.0;
+      PV.rotation = 0;
       PV.textCache.clear();
       PV.matches = [];
       PV.matchIdx = -1;
       PV.thumbsBuilt = false;
+      pvStage.classList.remove('pv-immersive');
       pvThumbs.style.display = 'none';
       pvSearchBar.style.display = 'none';
       pvSearchInput.value = '';
@@ -2811,12 +3030,36 @@ $('gt-run').addEventListener('click', async () => {
       pvEmpty.style.display = 'none';
       pvStage.style.display = 'flex';
       switchTab('viewer', { keepScroll: true });
-      requestAnimationFrame(() => pvRebuildLayout());
+      requestAnimationFrame(() => {
+        pvRebuildLayout();
+        if (PV.curPage > 1) {
+          setTimeout(() => pvJumpTo(PV.curPage), 80);
+          showToast(`Resumed at Page ${PV.curPage}`, 1400);
+        }
+      });
     } catch (err) {
+      if (err && (err.name === 'PasswordException' || /password/i.test(err.message || ''))) {
+        pendingLockedPdf = { uint8, filename };
+        if (pvPassErr) pvPassErr.textContent = password ? 'Incorrect password. Try again.' : '';
+        if (pvPassInput) { pvPassInput.value = ''; setTimeout(() => pvPassInput.focus(), 120); }
+        if (pvPassModal) pvPassModal.classList.add('open');
+        return;
+      }
       console.error(err);
       showToast('Could not open PDF');
     }
   }
+  document.getElementById('pv-pass-cancel')?.addEventListener('click', () => {
+    pvPassModal?.classList.remove('open');
+    pendingLockedPdf = null;
+  });
+  document.getElementById('pv-pass-unlock')?.addEventListener('click', () => {
+    if (!pendingLockedPdf) return;
+    pvOpenBytes(pendingLockedPdf.uint8, pendingLockedPdf.filename, pvPassInput?.value || '');
+  });
+  pvPassInput?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('pv-pass-unlock')?.click();
+  });
   window.__pexiOpenPdfBytes = pvOpenBytes;
 
   document.getElementById('pv-file-input')?.addEventListener('change', async e => {
@@ -2931,15 +3174,55 @@ $('gt-run').addEventListener('click', async () => {
     }
   });
 
+  const pvJumpModal = document.getElementById('pv-jump-modal');
+  const pvJumpInput = document.getElementById('pv-jump-input');
+  const pvJumpSub = document.getElementById('pv-jump-sub');
   pvPagePill?.addEventListener('click', () => {
-    if (!PV.numPages) return;
-    const val = prompt(`Jump to page (1–${PV.numPages}):`, String(PV.curPage));
-    const n = parseInt(val || '', 10);
-    if (!isNaN(n) && n >= 1 && n <= PV.numPages) pvJumpTo(n);
+    if (!PV.numPages || !pvJumpModal) return;
+    if (pvJumpSub) pvJumpSub.textContent = `Enter a page number between 1 and ${PV.numPages}`;
+    if (pvJumpInput) {
+      pvJumpInput.min = '1';
+      pvJumpInput.max = String(PV.numPages);
+      pvJumpInput.value = String(PV.curPage);
+      setTimeout(() => { pvJumpInput.focus(); pvJumpInput.select(); }, 100);
+    }
+    pvJumpModal.classList.add('open');
+  });
+  document.getElementById('pv-jump-cancel')?.addEventListener('click', () => pvJumpModal?.classList.remove('open'));
+  document.getElementById('pv-jump-first')?.addEventListener('click', () => { pvJumpModal?.classList.remove('open'); pvJumpTo(1); });
+  document.getElementById('pv-jump-last')?.addEventListener('click', () => { pvJumpModal?.classList.remove('open'); pvJumpTo(PV.numPages); });
+  document.getElementById('pv-jump-go')?.addEventListener('click', () => {
+    const n = parseInt(pvJumpInput?.value || '', 10);
+    if (!isNaN(n) && n >= 1 && n <= PV.numPages) {
+      pvJumpModal?.classList.remove('open');
+      pvJumpTo(n);
+    } else {
+      showToast(`Enter 1–${PV.numPages}`, 1200);
+    }
+  });
+  pvJumpInput?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('pv-jump-go')?.click();
+  });
+
+  document.getElementById('pv-share-btn')?.addEventListener('click', async () => {
+    if (!PV.rawBytes) return;
+    const blob = new Blob([PV.rawBytes], { type: 'application/pdf' });
+    if (window.__pexiShareBlob) {
+      await window.__pexiShareBlob(blob, PV.name || 'document.pdf', 'application/pdf');
+    } else {
+      showToast('Share is available in the Android app');
+    }
+  });
+
+  document.getElementById('pv-rot-btn')?.addEventListener('click', () => {
+    if (!PV.doc) return;
+    PV.rotation = (PV.rotation + 90) % 360;
+    pvRebuildLayout();
+    showToast(`Rotated ${PV.rotation}°`, 900);
   });
 
   const setZoom = z => {
-    PV.zoom = Math.max(0.6, Math.min(3.0, Math.round(z * 100) / 100));
+    PV.zoom = Math.max(0.6, Math.min(3.2, Math.round(z * 100) / 100));
     pvRebuildLayout();
   };
   document.getElementById('pv-prev')?.addEventListener('click', () => pvJumpTo(PV.curPage - 1));
@@ -2948,15 +3231,81 @@ $('gt-run').addEventListener('click', async () => {
   document.getElementById('pv-zin')?.addEventListener('click', () => setZoom(PV.zoom + 0.25));
   pvZoomLabel?.addEventListener('click', () => setZoom(1.0));
 
+  // Pinch-to-zoom, single-page swipe, double-tap zoom, and single-tap immersive mode
   let _lastTap = 0;
+  let _tapTimer = null;
+  let _touchStartX = 0, _touchStartY = 0, _touchMoved = false;
+  let _pinchDist0 = 0, _pinchScale = 1, _isPinching = false;
+
+  pvPages?.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      _isPinching = true;
+      _touchMoved = true;
+      clearTimeout(_tapTimer);
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      _pinchDist0 = Math.hypot(dx, dy) || 1;
+      _pinchScale = 1;
+    } else if (e.touches.length === 1) {
+      _isPinching = false;
+      _touchMoved = false;
+      _touchStartX = e.touches[0].clientX;
+      _touchStartY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  pvPages?.addEventListener('touchmove', e => {
+    if (_isPinching && e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy) || 1;
+      _pinchScale = Math.max(0.55, Math.min(2.6, dist / _pinchDist0));
+      pvPages.style.transform = `scale(${_pinchScale.toFixed(3)})`;
+      pvPages.style.transformOrigin = 'center top';
+      e.preventDefault();
+    } else if (e.touches.length === 1) {
+      const dx = Math.abs(e.touches[0].clientX - _touchStartX);
+      const dy = Math.abs(e.touches[0].clientY - _touchStartY);
+      if (dx > 12 || dy > 12) _touchMoved = true;
+    }
+  }, { passive: false });
+
   pvPages?.addEventListener('touchend', e => {
+    if (_isPinching) {
+      if (e.touches.length < 2) {
+        _isPinching = false;
+        pvPages.style.transform = '';
+        pvPages.style.transformOrigin = '';
+        if (Math.abs(_pinchScale - 1) > 0.08) {
+          setZoom(PV.zoom * _pinchScale);
+        }
+        _pinchScale = 1;
+      }
+      return;
+    }
     if (e.touches.length > 0) return;
+
+    // Horizontal swipe in single-page mode
+    if (PV.mode === 'single' && PV.zoom <= 1.08 && e.changedTouches && e.changedTouches[0]) {
+      const dx = e.changedTouches[0].clientX - _touchStartX;
+      const dy = Math.abs(e.changedTouches[0].clientY - _touchStartY);
+      if (Math.abs(dx) > 58 && dy < 70) {
+        pvJumpTo(dx < 0 ? PV.curPage + 1 : PV.curPage - 1);
+        return;
+      }
+    }
+    if (_touchMoved) return;
+
     const now = Date.now();
-    if (now - _lastTap < 280) {
+    if (now - _lastTap < 270) {
+      clearTimeout(_tapTimer);
       setZoom(PV.zoom > 1.2 ? 1.0 : 1.75);
       _lastTap = 0;
     } else {
       _lastTap = now;
+      _tapTimer = setTimeout(() => {
+        if (PV.doc) pvStage.classList.toggle('pv-immersive');
+      }, 280);
     }
   });
 
