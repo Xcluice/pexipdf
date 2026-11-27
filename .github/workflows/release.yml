@@ -78,9 +78,11 @@ jobs:
           TAG: ${{ steps.v.outputs.tag }}
         run: |
           NOTES=$(cat << 'EOF'
-          - New Telegram-style floating frosted-glass capsule bottom navigation bar with an elastic sliding pill indicator and bouncy icon micro-animations
-          - Directional Telegram-style horizontal tab transitions, staggered spring list cascades, and depth-push bottom sheets (background scales cleanly when sheets open)
-          - Material 3 vector SVGs across the PDF Reader and automatic device PDF library listing
+          - Real first-page PDF thumbnails and page counts on your device PDF list using native Android PdfRenderer (with fast disk caching and lazy loading)
+          - Grid & List view toggle plus Sort (Recent, A–Z, Size) and reading-progress badges on the Viewer library
+          - Pinch-to-zoom, single-page horizontal swipe, 90° page rotation, one-tap Share from Viewer, and tap-to-hide full-screen reading mode
+          - Auto-resume last read page, custom Go-to-Page bottom sheet, and password-protected PDF unlock support
+          - Telegram-style floating liquid-glass bottom bar, spring animations, and Material 3 SVGs throughout
           EOF
           )
           if gh release view "$TAG" >/dev/null 2>&1; then

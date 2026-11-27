@@ -11,7 +11,9 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color as AndroidColor
 import android.graphics.Matrix
+import android.graphics.pdf.PdfRenderer
 import android.net.Uri
+import android.os.ParcelFileDescriptor
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -42,8 +44,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.webkit.WebViewAssetLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
+import java.security.MessageDigest
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -70,6 +75,8 @@ class MainActivity : ComponentActivity() {
         val mode: String
     )
     private val transfers = ConcurrentHashMap<String, ActiveTransfer>()
+    private val thumbSemaphore = Semaphore(2)
+    private val thumbMetaCache = ConcurrentHashMap<String, Pair<String, Int>>()
 
     private val filePickerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -306,6 +313,100 @@ class MainActivity : ComponentActivity() {
                     "window.__pexiOnDevicePdfs && window.__pexiOnDevicePdfs($quoted)",
                     null
                 )
+            }
+        }
+    }
+
+    private fun hashThumbKey(key: String): String {
+        val md = MessageDigest.getInstance("SHA-256")
+        return md.digest(key.toByteArray()).take(12).joinToString("") { "%02x".format(it) }
+    }
+
+    private fun pushThumbToWeb(key: String, dataUrl: String, pageCount: Int) {
+        val qk = JSONObject.quote(key)
+        val qd = JSONObject.quote(dataUrl)
+        runOnUiThread {
+            webView?.evaluateJavascript(
+                "window.__pexiOnPdfThumb && window.__pexiOnPdfThumb($qk, $qd, $pageCount)",
+                null
+            )
+        }
+    }
+
+    private fun renderPdfThumbAsync(uriString: String, key: String) {
+        if (uriString.isBlank() || key.isBlank()) return
+        thumbMetaCache[key]?.let { (cachedUrl, cachedPages) ->
+            pushThumbToWeb(key, cachedUrl, cachedPages)
+            return
+        }
+        lifecycleScope.launch(Dispatchers.IO) {
+            val hash = hashThumbKey(key)
+            val dir = File(cacheDir, "pdf_thumbs").apply { mkdirs() }
+            val imgFile = File(dir, "$hash.jpg")
+            val pgFile = File(dir, "$hash.pg")
+
+            if (imgFile.exists() && imgFile.length() > 100) {
+                runCatching {
+                    val b64 = Base64.encodeToString(imgFile.readBytes(), Base64.NO_WRAP)
+                    val pages = if (pgFile.exists()) pgFile.readText().trim().toIntOrNull() ?: 0 else 0
+                    val url = "data:image/jpeg;base64,$b64"
+                    thumbMetaCache[key] = url to pages
+                    pushThumbToWeb(key, url, pages)
+                    return@launch
+                }
+            }
+
+            thumbSemaphore.withPermit {
+                var pfd: ParcelFileDescriptor? = null
+                try {
+                    val uri = Uri.parse(uriString)
+                    pfd = if (uri.scheme == "file") {
+                        val f = File(uri.path ?: "")
+                        if (!f.exists()) throw IllegalStateException("Missing file")
+                        ParcelFileDescriptor.open(f, ParcelFileDescriptor.MODE_READ_ONLY)
+                    } else {
+                        contentResolver.openFileDescriptor(uri, "r")
+                    }
+                    if (pfd == null) {
+                        pushThumbToWeb(key, "", -1)
+                        return@withPermit
+                    }
+                    PdfRenderer(pfd).use { renderer ->
+                        val pageCount = renderer.pageCount
+                        if (pageCount <= 0) {
+                            pushThumbToWeb(key, "", 0)
+                            return@withPermit
+                        }
+                        renderer.openPage(0).use { page ->
+                            val targetW = 200
+                            val ratio = if (page.width > 0) page.height.toFloat() / page.width.toFloat() else 1.414f
+                            val targetH = (targetW * ratio).toInt().coerceIn(110, 300)
+                            val bmp = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.ARGB_8888)
+                            try {
+                                bmp.eraseColor(AndroidColor.WHITE)
+                                page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                                val baos = ByteArrayOutputStream()
+                                bmp.compress(Bitmap.CompressFormat.JPEG, 78, baos)
+                                val bytes = baos.toByteArray()
+                                runCatching {
+                                    imgFile.writeBytes(bytes)
+                                    pgFile.writeText(pageCount.toString())
+                                }
+                                val url = "data:image/jpeg;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+                                thumbMetaCache[key] = url to pageCount
+                                pushThumbToWeb(key, url, pageCount)
+                            } finally {
+                                bmp.recycle()
+                            }
+                        }
+                    }
+                } catch (_: SecurityException) {
+                    pushThumbToWeb(key, "", -2)
+                } catch (_: Exception) {
+                    pushThumbToWeb(key, "", -1)
+                } finally {
+                    runCatching { pfd?.close() }
+                }
             }
         }
     }
@@ -724,6 +825,11 @@ class MainActivity : ComponentActivity() {
         fun openPdfUri(uriString: String) {
             if (uriString.isBlank()) return
             streamExternalPdfToViewer(Uri.parse(uriString))
+        }
+
+        @JavascriptInterface
+        fun requestPdfThumbnail(uriString: String, key: String) {
+            renderPdfThumbAsync(uriString, key)
         }
 
         @JavascriptInterface
