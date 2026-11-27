@@ -50,7 +50,7 @@ jobs:
             git config user.name "Xcluice"
             git config user.email "mohammadmominwani123@gmail.com"
             git add index.html
-            git commit -m "Sync Material 3 SVG Reader and Device PDF Library to index.html [skip ci]"
+            git commit -m "Sync Telegram-style floating bottom bar and spring animations to index.html [skip ci]"
             git push origin HEAD:main
           fi
           ls -lh app/src/main/assets
@@ -78,9 +78,9 @@ jobs:
           TAG: ${{ steps.v.outputs.tag }}
         run: |
           NOTES=$(cat << 'EOF'
-          - Replaced all PDF Reader emojis with crisp Material 3 vector SVGs (search, thumbnails, Sun/Moon/Sepia theme toggle, copy text, close, zoom, prev/next, Save/Read/Share, and camera controls)
-          - Viewer tab now automatically lists PDFs already on your device (Downloads, Documents, WhatsApp, Telegram) with instant name/folder filter, file size, relative date, refresh button, and 1-tap open
-          - Added Android 8.0–15 storage access flow for scanning all device PDFs
+          - New Telegram-style floating frosted-glass capsule bottom navigation bar with an elastic sliding pill indicator and bouncy icon micro-animations
+          - Directional Telegram-style horizontal tab transitions, staggered spring list cascades, and depth-push bottom sheets (background scales cleanly when sheets open)
+          - Material 3 vector SVGs across the PDF Reader and automatic device PDF library listing
           EOF
           )
           if gh release view "$TAG" >/dev/null 2>&1; then
