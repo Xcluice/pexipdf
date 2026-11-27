@@ -15,6 +15,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.provider.OpenableColumns
 import android.util.Base64
 import android.view.ViewGroup
 import android.webkit.*
@@ -40,6 +41,7 @@ import androidx.webkit.WebViewAssetLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -48,6 +50,8 @@ import java.util.concurrent.ConcurrentHashMap
 class MainActivity : ComponentActivity() {
 
     private var webView: WebView? = null
+    private var webReady = false
+    private var pendingExternalPdfUri: Uri? = null
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private var pendingCameraPermissionRequest: PermissionRequest? = null
     private var pendingNativeCameraLaunch = false
@@ -143,7 +147,6 @@ class MainActivity : ComponentActivity() {
                 var bmp = BitmapFactory.decodeFile(photoFile.absolutePath, decodeOpts)
                     ?: throw IllegalStateException("Could not decode photo")
 
-                // Cap longest side to 1800px for crisp, fast PDF generation
                 val longest = maxOf(bmp.width, bmp.height)
                 if (longest > maxDim) {
                     val scale = maxDim.toFloat() / longest.toFloat()
@@ -167,7 +170,7 @@ class MainActivity : ComponentActivity() {
                         null
                     )
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 photoFile.delete()
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@MainActivity, "Photo import failed", Toast.LENGTH_SHORT).show()
@@ -183,14 +186,89 @@ class MainActivity : ComponentActivity() {
             pendingCameraFile = f
             val uri = FileProvider.getUriForFile(this, "${packageName}.files", f)
             takePictureLauncher.launch(uri)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Toast.makeText(this, "Could not open camera", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun extractPdfUri(intent: Intent?): Uri? {
+        if (intent == null) return null
+        return when (intent.action) {
+            Intent.ACTION_VIEW -> intent.data
+            Intent.ACTION_SEND -> {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(Intent.EXTRA_STREAM)
+            }
+            else -> null
+        }
+    }
+
+    private fun queryDisplayName(uri: Uri): String {
+        var name: String? = null
+        runCatching {
+            contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    val idx = c.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (idx >= 0) name = c.getString(idx)
+                }
+            }
+        }
+        return name?.takeIf { it.isNotBlank() } ?: uri.lastPathSegment?.substringAfterLast('/') ?: "document.pdf"
+    }
+
+    private fun streamExternalPdfToViewer(uri: Uri) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val name = queryDisplayName(uri)
+                val quotedName = JSONObject.quote(name)
+                withContext(Dispatchers.Main) {
+                    webView?.evaluateJavascript(
+                        "window.__pexiExternalPdfStart && window.__pexiExternalPdfStart($quotedName)",
+                        null
+                    )
+                }
+                contentResolver.openInputStream(uri)?.use { input ->
+                    val buf = ByteArray(256 * 1024)
+                    while (true) {
+                        val n = input.read(buf)
+                        if (n <= 0) break
+                        val b64 = Base64.encodeToString(buf, 0, n, Base64.NO_WRAP)
+                        withContext(Dispatchers.Main) {
+                            webView?.evaluateJavascript(
+                                "window.__pexiExternalPdfChunk && window.__pexiExternalPdfChunk('$b64')",
+                                null
+                            )
+                        }
+                    }
+                } ?: throw IllegalStateException("Cannot read PDF")
+                withContext(Dispatchers.Main) {
+                    webView?.evaluateJavascript(
+                        "window.__pexiExternalPdfEnd && window.__pexiExternalPdfEnd()",
+                        null
+                    )
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@MainActivity, "Could not open PDF: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val uri = extractPdfUri(intent)
+        if (uri != null) {
+            if (webReady) streamExternalPdfToViewer(uri)
+            else pendingExternalPdfUri = uri
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applySystemBars(isDark = true)
+        pendingExternalPdfUri = extractPdfUri(intent)
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -472,6 +550,18 @@ class MainActivity : ComponentActivity() {
     }
 
     inner class PexiBridge(private val onThemeChange: (Boolean) -> Unit) {
+        @JavascriptInterface
+        fun onReady() {
+            runOnUiThread {
+                webReady = true
+                val pending = pendingExternalPdfUri
+                pendingExternalPdfUri = null
+                if (pending != null) {
+                    streamExternalPdfToViewer(pending)
+                }
+            }
+        }
+
         @JavascriptInterface
         fun getAppVersion(): String = BuildConfig.VERSION_NAME
 
