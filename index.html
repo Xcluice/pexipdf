@@ -17,7 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet" crossorigin="anonymous">
 
 <style>
-  /* PexiPDF by Xcluice · Native Android App-Style UI + Pro PDF Viewer */
+  /* PexiPDF by Xcluice · Native Android App-Style UI + Material 3 SVGs + Pro PDF Viewer */
   :root {
     --bg: #F4F4F5;
     --surface: #FFFFFF;
@@ -217,34 +217,64 @@
   .res-name { font-weight: 700; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .res-size { font-size: 12px; color: var(--green); font-weight: 600; margin-top: 2px; }
   .result-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-  #dl-btn, #share-btn, #res-read-btn { height: 42px; border-radius: 999px; font-weight: 600; font-size: 12.5px; display: flex; align-items: center; justify-content: center; gap: 5px; cursor: pointer; text-decoration: none; }
+  #dl-btn, #share-btn, #res-read-btn { height: 42px; border-radius: 999px; font-weight: 600; font-size: 12.5px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; text-decoration: none; }
+  #dl-btn svg, #share-btn svg, #res-read-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
   #dl-btn { background: var(--ink); color: var(--on-ink); border: none; }
   #share-btn, #res-read-btn { background: var(--surface-sunken); color: var(--text); border: 1px solid var(--border); }
   #empty { display: none; }
 
-  /* ---------- PRO PDF VIEWER SCREEN ---------- */
-  #pv-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 18px; text-align: center; gap: 14px; }
-  .pv-hero-drop { position: relative; width: 100%; background: var(--surface); border: 1.5px dashed var(--border-strong); border-radius: 26px; padding: 34px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; box-shadow: var(--shadow); transition: transform .2s var(--spring), border-color .2s; }
-  .pv-hero-drop:active { transform: scale(0.98); border-color: var(--accent); }
-  .pv-hero-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-  .pv-hero-ico { width: 58px; height: 58px; border-radius: 18px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
-  .pv-hero-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; color: var(--text); }
-  .pv-hero-sub { font-size: 12.5px; color: var(--muted); max-width: 280px; line-height: 1.45; }
-  .pv-caps { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; margin-top: 4px; }
-  .pv-cap { font-size: 11px; font-weight: 600; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 5px 11px; border-radius: 999px; }
+  #pv-empty { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; padding: 14px 16px 24px; gap: 14px; }
+  #pv-empty::-webkit-scrollbar { width: 0; }
+  .pv-browse-card { position: relative; width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 22px; padding: 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; box-shadow: var(--shadow); transition: transform .2s var(--spring), border-color .2s; }
+  .pv-browse-card:active { transform: scale(0.985); border-color: var(--accent); }
+  .pv-browse-card input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .pv-hero-ico { width: 46px; height: 46px; border-radius: 14px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex-shrink: 0; }
+  .pv-hero-ico svg { width: 22px; height: 22px; }
+  .pv-browse-copy { flex: 1; min-width: 0; }
+  .pv-hero-title { font-size: 15px; font-weight: 700; color: var(--text); }
+  .pv-hero-sub { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+
+  #pv-device-section { display: none; flex-direction: column; gap: 10px; }
+  .pv-dev-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .pv-dev-head-left { display: flex; align-items: center; gap: 8px; }
+  #pv-device-count { font-size: 11px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 999px; }
+  .pv-filter-row { display: flex; align-items: center; gap: 8px; }
+  .pv-filter-wrap { position: relative; flex: 1; }
+  .pv-filter-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--muted); pointer-events: none; }
+  #pv-device-filter { height: 38px; padding-left: 34px; border-radius: 999px; font-size: 12.5px; }
+
+  #pv-perm-card { display: none; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--accent); border-radius: 18px; }
+  .pv-perm-copy { flex: 1; min-width: 0; }
+  .pv-perm-title { font-size: 13px; font-weight: 700; color: var(--text); }
+  .pv-perm-sub { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+  #pv-perm-btn { height: 34px; padding: 0 14px; border-radius: 999px; background: var(--accent); color: #fff; border: none; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+
+  #pv-device-list { background: var(--surface); border: 1px solid var(--border); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow); }
+  .pv-dev-row { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border); padding: 12px 14px; display: flex; align-items: center; gap: 12px; text-align: left; color: var(--text); cursor: pointer; }
+  .pv-dev-row:last-child { border-bottom: none; }
+  .pv-dev-row:active { background: var(--surface-sunken); }
+  .pv-dev-ico { width: 38px; height: 38px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex-shrink: 0; }
+  .pv-dev-ico svg { width: 18px; height: 18px; }
+  .pv-dev-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .pv-dev-name { font-size: 13.5px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pv-dev-meta { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pv-dev-chev { color: var(--muted); display: grid; place-items: center; flex-shrink: 0; opacity: 0.65; }
+  .pv-dev-chev svg { width: 16px; height: 16px; }
+  .pv-dev-empty { padding: 24px 16px; text-align: center; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
 
   #pv-stage { display: none; flex-direction: column; height: 100%; width: 100%; position: relative; overflow: hidden; }
   .pv-prog-track { height: 2.5px; width: 100%; background: var(--border); flex-shrink: 0; }
   #pv-prog-fill { height: 100%; width: 0%; background: var(--accent); transition: width .2s var(--ease); }
-  .pv-toolbar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .pv-toolbar { display: flex; align-items: center; gap: 5px; padding: 8px 10px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
   #pv-title { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #pv-page-pill { background: var(--accent-soft); color: var(--accent); border: none; border-radius: 999px; padding: 5px 10px; font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer; white-space: nowrap; }
-  .pv-tbtn { width: 34px; height: 34px; border-radius: 10px; background: var(--surface-sunken); border: 1px solid var(--border); color: var(--text); display: grid; place-items: center; cursor: pointer; font-size: 14px; flex-shrink: 0; }
+  .pv-tbtn { width: 34px; height: 34px; border-radius: 10px; background: var(--surface-sunken); border: 1px solid var(--border); color: var(--text); display: grid; place-items: center; cursor: pointer; flex-shrink: 0; }
+  .pv-tbtn svg { width: 16px; height: 16px; display: block; }
   .pv-tbtn:active { transform: scale(0.92); }
 
-  #pv-search-bar { display: none; align-items: center; gap: 6px; padding: 8px 12px; background: var(--surface-elev); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  #pv-search-bar { display: none; align-items: center; gap: 6px; padding: 8px 10px; background: var(--surface-elev); border-bottom: 1px solid var(--border); flex-shrink: 0; }
   #pv-search-input { flex: 1; height: 34px; font-size: 12.5px; border-radius: 10px; }
-  #pv-search-count { font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap; min-width: 54px; text-align: center; }
+  #pv-search-count { font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap; min-width: 52px; text-align: center; }
 
   #pv-thumbs { display: none; gap: 8px; padding: 10px 12px; overflow-x: auto; background: var(--surface-sunken); border-bottom: 1px solid var(--border); flex-shrink: 0; }
   #pv-thumbs::-webkit-scrollbar { height: 0; }
@@ -263,7 +293,8 @@
   .pv-pages.theme-sepia .pv-page canvas { filter: sepia(0.32) brightness(0.96) contrast(0.96); }
 
   .pv-dock { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 5px 8px; background: var(--bar-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border-strong); border-radius: 999px; box-shadow: var(--shadow-md); z-index: 20; }
-  .pv-dbtn { height: 32px; min-width: 32px; padding: 0 8px; border-radius: 999px; background: transparent; border: none; color: var(--text); font-size: 13px; font-weight: 700; cursor: pointer; display: grid; place-items: center; }
+  .pv-dbtn { height: 32px; min-width: 32px; padding: 0 8px; border-radius: 999px; background: transparent; border: none; color: var(--text); font-size: 12px; font-weight: 700; cursor: pointer; display: grid; place-items: center; }
+  .pv-dbtn svg { width: 16px; height: 16px; display: block; }
   .pv-dbtn:active { background: var(--surface-sunken); }
   #pv-zoom-label { font-size: 11.5px; font-weight: 700; color: var(--accent); min-width: 44px; text-align: center; cursor: pointer; font-variant-numeric: tabular-nums; }
   .pv-dsep { width: 1px; height: 16px; background: var(--border); margin: 0 2px; }
@@ -340,6 +371,7 @@
   #camera-modal { justify-content: space-between; padding: calc(12px + var(--safe-top)) 12px calc(16px + var(--safe-bot)); background: #000; }
   .cam-top-bar { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px 10px; z-index: 4; }
   .cam-pill-btn { background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.14); color: #fff; font-size: 12.5px; font-weight: 600; padding: 8px 14px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .cam-pill-btn svg { width: 15px; height: 15px; }
   #video-stream { flex: 1; width: 100%; min-height: 0; object-fit: cover; background: #111; border-radius: 22px; }
   .cam-controls { height: 92px; width: 100%; display: flex; align-items: center; justify-content: space-around; margin-top: 10px; flex-shrink: 0; }
   .cam-close { background: rgba(255,255,255,.16); border: none; color: #fff; font-size: 14px; font-weight: 600; padding: 10px 20px; border-radius: 999px; cursor: pointer; }
@@ -502,10 +534,10 @@
           <button type="button" class="pill-action primary" id="pages-add-btn">+ Add</button>
         </div>
         <div class="preview-actions">
-          <button type="button" class="clear-btn" id="select-all-btn">☑ Select All</button>
-          <button type="button" class="clear-btn" id="reverse-btn">⇅ Reverse</button>
-          <button type="button" class="undo-btn" id="undo-btn" disabled>↩ Undo</button>
-          <button type="button" class="clear-btn" id="clear-all-btn">✕ Clear</button>
+          <button type="button" class="clear-btn" id="select-all-btn">Select All</button>
+          <button type="button" class="clear-btn" id="reverse-btn">Reverse</button>
+          <button type="button" class="undo-btn" id="undo-btn" disabled>Undo</button>
+          <button type="button" class="clear-btn" id="clear-all-btn">Clear</button>
         </div>
         <div id="grid"></div>
         <div id="info-bar">
@@ -521,9 +553,9 @@
             <div class="res-info"><div class="res-name" id="res-name">output.pdf</div><div class="res-size" id="res-size"></div></div>
           </div>
           <div class="result-btns">
-            <a id="dl-btn">⬇ Save</a>
-            <button type="button" id="res-read-btn">👁 Read</button>
-            <button type="button" id="share-btn">⬆ Share</button>
+            <a id="dl-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Save</a>
+            <button type="button" id="res-read-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Read</button>
+            <button type="button" id="share-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share</button>
           </div>
         </div>
       </div>
@@ -534,24 +566,48 @@
 
     <section class="app-screen" data-screen="viewer">
       <div id="pv-empty">
-        <div class="pv-hero-drop">
+        <div class="pv-browse-card">
           <input type="file" id="pv-file-input" accept="application/pdf">
           <div class="pv-hero-ico">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 13h6M9 17h4"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6M9 15l3-3 3 3"/>
             </svg>
           </div>
-          <div class="pv-hero-title">PDF Reader</div>
-          <div class="pv-hero-sub">Tap to open any PDF from your device, or tap any PDF in Files &amp; WhatsApp and choose <b>Open with PexiPDF</b>.</div>
-          <div class="pv-caps">
-            <span class="pv-cap">OLED Night Mode</span>
-            <span class="pv-cap">Warm Sepia</span>
-            <span class="pv-cap">In-PDF Search</span>
-            <span class="pv-cap">Thumbnails</span>
-            <span class="pv-cap">Double-Tap Zoom</span>
+          <div class="pv-browse-copy">
+            <div class="pv-hero-title">Browse PDF from Storage</div>
+            <div class="pv-hero-sub">Pick any PDF file, or tap a PDF below</div>
           </div>
+          <span class="pv-dev-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
         </div>
-        <button type="button" class="btn-primary" id="pv-open-last" style="display:none;">Open Last Generated PDF</button>
+
+        <button type="button" class="btn-primary" id="pv-open-last" style="display:none;width:100%;">Open Last Generated PDF</button>
+
+        <div id="pv-perm-card">
+          <div class="pv-perm-copy">
+            <div class="pv-perm-title">Show all PDFs on device</div>
+            <div class="pv-perm-sub">Allow storage access to list PDFs from Downloads &amp; WhatsApp</div>
+          </div>
+          <button type="button" id="pv-perm-btn">Allow</button>
+        </div>
+
+        <div id="pv-device-section">
+          <div class="pv-dev-head">
+            <div class="pv-dev-head-left">
+              <span class="section-label">On this device</span>
+              <span id="pv-device-count"></span>
+            </div>
+            <button type="button" class="pv-tbtn" id="pv-refresh-btn" title="Refresh PDF list" aria-label="Refresh">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+          </div>
+          <div class="pv-filter-row">
+            <div class="pv-filter-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="pv-device-filter" placeholder="Filter PDFs by name or folder…">
+            </div>
+          </div>
+          <div id="pv-device-list"></div>
+        </div>
       </div>
 
       <div id="pv-stage">
@@ -559,27 +615,49 @@
         <div class="pv-toolbar">
           <div id="pv-title">document.pdf</div>
           <button type="button" id="pv-page-pill" title="Jump to page">1 / 1</button>
-          <button type="button" class="pv-tbtn" id="pv-search-btn" title="Search in PDF">🔍</button>
-          <button type="button" class="pv-tbtn" id="pv-thumbs-btn" title="Page thumbnails">⊞</button>
-          <button type="button" class="pv-tbtn" id="pv-theme-btn" title="Reading theme (Original / Night / Sepia)">☀</button>
-          <button type="button" class="pv-tbtn" id="pv-copy-btn" title="Copy current page text">📋</button>
-          <button type="button" class="pv-tbtn" id="pv-close-btn" title="Close PDF">✕</button>
+          <button type="button" class="pv-tbtn" id="pv-search-btn" title="Search in PDF" aria-label="Search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
+          <button type="button" class="pv-tbtn" id="pv-thumbs-btn" title="Page thumbnails" aria-label="Thumbnails">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          </button>
+          <button type="button" class="pv-tbtn" id="pv-theme-btn" title="Reading theme" aria-label="Reading theme">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          </button>
+          <button type="button" class="pv-tbtn" id="pv-copy-btn" title="Copy current page text" aria-label="Copy text">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+          <button type="button" class="pv-tbtn" id="pv-close-btn" title="Close PDF" aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
         <div id="pv-search-bar">
           <input type="text" id="pv-search-input" placeholder="Search text inside PDF…">
           <span id="pv-search-count"></span>
-          <button type="button" class="pv-tbtn" id="pv-search-prev">‹</button>
-          <button type="button" class="pv-tbtn" id="pv-search-next">›</button>
+          <button type="button" class="pv-tbtn" id="pv-search-prev" aria-label="Previous match">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button type="button" class="pv-tbtn" id="pv-search-next" aria-label="Next match">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
         </div>
         <div id="pv-thumbs"></div>
         <div id="pv-pages" class="pv-pages theme-orig mode-scroll"></div>
         <div class="pv-dock">
-          <button type="button" class="pv-dbtn" id="pv-prev" title="Previous page">‹</button>
-          <button type="button" class="pv-dbtn" id="pv-next" title="Next page">›</button>
+          <button type="button" class="pv-dbtn" id="pv-prev" title="Previous page" aria-label="Previous page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button type="button" class="pv-dbtn" id="pv-next" title="Next page" aria-label="Next page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
           <span class="pv-dsep"></span>
-          <button type="button" class="pv-dbtn" id="pv-zout" title="Zoom out">−</button>
+          <button type="button" class="pv-dbtn" id="pv-zout" title="Zoom out" aria-label="Zoom out">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
           <span id="pv-zoom-label" title="Reset to fit width">100%</span>
-          <button type="button" class="pv-dbtn" id="pv-zin" title="Zoom in">+</button>
+          <button type="button" class="pv-dbtn" id="pv-zin" title="Zoom in" aria-label="Zoom in">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
           <span class="pv-dsep"></span>
           <button type="button" class="pv-dbtn" id="pv-mode-btn" style="font-size:11px;padding:0 10px;">Scroll</button>
         </div>
@@ -705,8 +783,8 @@
 
 <div id="camera-modal" class="modal-overlay">
   <div class="cam-top-bar">
-    <button type="button" class="cam-pill-btn" id="cam-flip-btn">↻ Flip</button>
-    <button type="button" class="cam-pill-btn" id="cam-native-btn" style="display:none;">📷 System Camera</button>
+    <button type="button" class="cam-pill-btn" id="cam-flip-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Flip</button>
+    <button type="button" class="cam-pill-btn" id="cam-native-btn" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>System Camera</button>
   </div>
   <video id="video-stream" autoplay playsinline muted></video>
   <div id="cam-flash"></div>
@@ -781,7 +859,7 @@
       <div id="compress-progress" style="display:none;"><div class="prog-track"><div id="compress-prog-bar" style="height:100%;background:var(--accent);width:0%;border-radius:999px;"></div></div><div id="compress-prog-label" style="font-size:11.5px;color:var(--muted);margin-top:6px;text-align:center;">Compressing…</div></div>
       <div class="compress-result" id="compress-result">
         <div class="compress-result-stats"><div class="compress-stat"><div class="num" id="compress-before">0 MB</div><div class="lbl">Before</div></div><div class="compress-arrow">→</div><div class="compress-stat"><div class="num" id="compress-after">0 MB</div><div class="lbl">After</div></div><div class="compress-stat saved"><div class="num" id="compress-saved">0%</div><div class="lbl">Saved</div></div></div>
-        <div class="modal-actions" style="justify-content:stretch;"><a id="compress-dl-btn" class="btn-primary" style="text-decoration:none;flex:1;">⬇ Save Compressed PDF</a></div>
+        <div class="modal-actions" style="justify-content:stretch;"><a id="compress-dl-btn" class="btn-primary" style="text-decoration:none;flex:1;">Save Compressed PDF</a></div>
       </div>
     </div>
     <div class="modal-actions"><button type="button" class="btn-cancel" id="compress-close-btn">Close</button></div>
@@ -802,7 +880,7 @@
       <div id="compress-video-progress" style="display:none;"><div class="prog-track"><div id="compress-video-prog-bar" style="height:100%;background:var(--accent);width:0%;border-radius:999px;"></div></div><div id="compress-video-prog-label" style="font-size:11.5px;color:var(--muted);margin-top:6px;text-align:center;">Compressing…</div></div>
       <div class="compress-result" id="compress-video-result">
         <div class="compress-result-stats"><div class="compress-stat"><div class="num" id="compress-video-before">0 MB</div><div class="lbl">Before</div></div><div class="compress-arrow">→</div><div class="compress-stat"><div class="num" id="compress-video-after">0 MB</div><div class="lbl">After</div></div><div class="compress-stat saved"><div class="num" id="compress-video-saved">0%</div><div class="lbl">Saved</div></div></div>
-        <div class="modal-actions" style="justify-content:stretch;"><a id="compress-video-dl-btn" class="btn-primary" style="text-decoration:none;flex:1;">⬇ Save Compressed Video</a></div>
+        <div class="modal-actions" style="justify-content:stretch;"><a id="compress-video-dl-btn" class="btn-primary" style="text-decoration:none;flex:1;">Save Compressed Video</a></div>
       </div>
     </div>
     <div class="modal-actions"><button type="button" class="btn-cancel" id="compress-video-close-btn">Close</button></div>
@@ -820,7 +898,7 @@
       <div id="gt-opts" style="display:flex;flex-direction:column;gap:12px;"></div>
       <button type="button" class="btn-primary" id="gt-run" style="width:100%;">Run</button>
       <div id="gt-progress" style="display:none;"><div class="prog-track"><div id="gt-bar" style="height:100%;width:0%;background:var(--accent);border-radius:999px;"></div></div><div id="gt-label" style="font-size:11.5px;color:var(--muted);margin-top:6px;text-align:center;">Working…</div></div>
-      <div id="gt-res"><div class="big-num" id="gt-res-num">0 KB</div><div class="lbl" id="gt-res-lbl">Output size</div><div class="modal-actions" style="justify-content:stretch;"><a id="gt-dl" class="btn-primary" style="text-decoration:none;flex:1;">⬇ Save Output</a></div></div>
+      <div id="gt-res"><div class="big-num" id="gt-res-num">0 KB</div><div class="lbl" id="gt-res-lbl">Output size</div><div class="modal-actions" style="justify-content:stretch;"><a id="gt-dl" class="btn-primary" style="text-decoration:none;flex:1;">Save Output</a></div></div>
     </div>
     <div class="modal-actions"><button type="button" class="btn-cancel" id="gt-close">Close</button></div>
   </div>
@@ -1081,7 +1159,7 @@ document.getElementById('cam-snap-btn').addEventListener('click', () => {
       selected: false
     });
     camCounter.textContent = images.length;
-    showToast('📸 Page ' + images.length + ' captured', 1200);
+    showToast('Page ' + images.length + ' captured', 1200);
   }, 'image/jpeg', 0.84);
 });
 
@@ -2234,10 +2312,16 @@ $('gt-run').addEventListener('click', async () => {
     });
 })();
 
-// ─── ANDROID APP SHELL · PRO PDF VIEWER · NATIVE BRIDGE ──────────────────────
+// ─── ANDROID APP SHELL · PRO PDF VIEWER · DEVICE PDF LIST · NATIVE BRIDGE ────
 (function () {
   const tabs = ['home', 'viewer', 'tools', 'settings'];
   let activeTab = 'home';
+
+  const THEME_SVGS = {
+    orig: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>',
+    night: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+    sepia: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>'
+  };
 
   function switchTab(tab, opts) {
     if (!tabs.includes(tab)) return;
@@ -2256,6 +2340,9 @@ $('gt-run').addEventListener('click', async () => {
       b.setAttribute('aria-selected', b.dataset.tab === tab ? 'true' : 'false');
     });
     document.body.classList.toggle('viewer-mode', tab === 'viewer');
+    if (tab === 'viewer' && window.PexiBridge && window.PexiBridge.listDevicePdfs && !PV.doc) {
+      refreshDevicePdfs();
+    }
     const scrollEl = document.getElementById('app-scroll');
     if (scrollEl && !(opts && opts.keepScroll)) scrollEl.scrollTop = 0;
   }
@@ -2300,7 +2387,7 @@ $('gt-run').addEventListener('click', async () => {
       renderGrid();
       switchTab('home', { keepScroll: true });
       setTimeout(() => document.getElementById('preview-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
-      showToast('📸 Photo added');
+      showToast('Photo added');
     } catch (e) {
       console.error(e);
       showToast('Could not import captured photo');
@@ -2339,6 +2426,91 @@ $('gt-run').addEventListener('click', async () => {
       else if (overlay.id === 'gt-modal') document.getElementById('gt-close')?.click();
       else if (overlay.id === 'about-modal') closeAbout();
     });
+  });
+
+  let devicePdfs = [];
+  const pvDevSection = document.getElementById('pv-device-section');
+  const pvDevList = document.getElementById('pv-device-list');
+  const pvDevCount = document.getElementById('pv-device-count');
+  const pvDevFilter = document.getElementById('pv-device-filter');
+  const pvPermCard = document.getElementById('pv-perm-card');
+
+  function fmtRelDate(sec) {
+    if (!sec) return '';
+    const diff = Math.max(0, Math.floor(Date.now() / 1000) - sec);
+    if (diff < 3600) return Math.max(1, Math.floor(diff / 60)) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+    const d = new Date(sec * 1000);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  function escHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function renderDevicePdfList() {
+    if (!pvDevList) return;
+    const q = (pvDevFilter?.value || '').trim().toLowerCase();
+    const filtered = q ? devicePdfs.filter(p => (p.name || '').toLowerCase().includes(q) || (p.folder || '').toLowerCase().includes(q)) : devicePdfs;
+    if (pvDevCount) pvDevCount.textContent = filtered.length ? `${filtered.length} PDF${filtered.length === 1 ? '' : 's'}` : '';
+    if (!filtered.length) {
+      pvDevList.innerHTML = `<div class="pv-dev-empty">${q ? 'No matching PDFs found.' : 'No PDFs found on device yet. Tap Browse PDF above or allow storage access.'}</div>`;
+      return;
+    }
+    pvDevList.innerHTML = filtered.map((p, idx) => `
+      <button type="button" class="pv-dev-row" data-idx="${idx}">
+        <span class="pv-dev-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15h6M9 11h3"/>
+          </svg>
+        </span>
+        <span class="pv-dev-body">
+          <span class="pv-dev-name">${escHtml(p.name)}</span>
+          <span class="pv-dev-meta">${escHtml(formatBytes(p.size || 0))}${p.folder ? ' · ' + escHtml(p.folder) : ''}${p.modified ? ' · ' + fmtRelDate(p.modified) : ''}</span>
+        </span>
+        <span class="pv-dev-chev" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </span>
+      </button>
+    `).join('');
+    pvDevList.querySelectorAll('.pv-dev-row').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = filtered[parseInt(btn.dataset.idx, 10)];
+        if (item && window.PexiBridge && window.PexiBridge.openPdfUri) {
+          window.PexiBridge.openPdfUri(item.uri);
+        }
+      });
+    });
+  }
+
+  function refreshDevicePdfs() {
+    if (!window.PexiBridge || !window.PexiBridge.listDevicePdfs) return;
+    if (pvDevSection) pvDevSection.style.display = 'flex';
+    if (pvDevList && !devicePdfs.length) {
+      pvDevList.innerHTML = '<div class="pv-dev-empty">Scanning PDFs on device…</div>';
+    }
+    try { window.PexiBridge.listDevicePdfs(); } catch (_) {}
+  }
+
+  window.__pexiOnDevicePdfs = function (payload) {
+    try {
+      const data = typeof payload === 'string' ? JSON.parse(payload) : payload;
+      devicePdfs = Array.isArray(data.items) ? data.items : [];
+      if (pvDevSection) pvDevSection.style.display = 'flex';
+      if (pvPermCard) pvPermCard.style.display = data.needsPermission ? 'flex' : 'none';
+      renderDevicePdfList();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  pvDevFilter?.addEventListener('input', renderDevicePdfList);
+  document.getElementById('pv-refresh-btn')?.addEventListener('click', refreshDevicePdfs);
+  document.getElementById('pv-perm-btn')?.addEventListener('click', () => {
+    if (window.PexiBridge && window.PexiBridge.requestPdfListPermission) {
+      window.PexiBridge.requestPdfListPermission();
+    }
   });
 
   const PV = {
@@ -2539,7 +2711,7 @@ $('gt-run').addEventListener('click', async () => {
       requestAnimationFrame(() => pvRebuildLayout());
     } catch (err) {
       console.error(err);
-      showToast('Could not open PDF (check password or file)');
+      showToast('Could not open PDF');
     }
   }
   window.__pexiOpenPdfBytes = pvOpenBytes;
@@ -2566,14 +2738,14 @@ $('gt-run').addEventListener('click', async () => {
     pvPages.innerHTML = '';
     pvStage.style.display = 'none';
     pvEmpty.style.display = 'flex';
+    refreshDevicePdfs();
   });
 
   pvThemeBtn?.addEventListener('click', () => {
     const order = ['orig', 'night', 'sepia'];
-    const labels = { orig: '☀', night: '☾', sepia: '📜' };
     const names = { orig: 'Original paper', night: 'OLED Night mode', sepia: 'Warm Sepia' };
     PV.theme = order[(order.indexOf(PV.theme) + 1) % order.length];
-    pvThemeBtn.textContent = labels[PV.theme];
+    pvThemeBtn.innerHTML = THEME_SVGS[PV.theme];
     pvPages.className = `pv-pages theme-${PV.theme} mode-${PV.mode}`;
     showToast(names[PV.theme], 1100);
   });
@@ -2650,7 +2822,7 @@ $('gt-run').addEventListener('click', async () => {
       }
       if (!txt) { showToast('No selectable text on this page'); return; }
       await navigator.clipboard.writeText(txt);
-      showToast(`📋 Copied Page ${PV.curPage} text`);
+      showToast(`Copied Page ${PV.curPage} text`);
     } catch (_) {
       showToast('Could not copy text');
     }
