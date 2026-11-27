@@ -950,6 +950,35 @@ async function startCameraStream(facing) {
   await videoStream.play().catch(() => {});
 }
 
+let camFacing = 'environment';
+let camSnapping = false;
+
+async function startCameraStream(facing) {
+  if (currentMediaStream) {
+    currentMediaStream.getTracks().forEach(t => t.stop());
+    currentMediaStream = null;
+  }
+  const constraintsList = [
+    { video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false },
+    { video: { facingMode: facing }, audio: false },
+    { video: true, audio: false }
+  ];
+  let stream = null;
+  let lastErr = null;
+  for (const c of constraintsList) {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia(c);
+      break;
+    } catch (e) { lastErr = e; }
+  }
+  if (!stream) throw lastErr || new Error('Camera unavailable');
+  currentMediaStream = stream;
+  videoStream.srcObject = stream;
+  videoStream.muted = true;
+  videoStream.playsInline = true;
+  await videoStream.play().catch(() => {});
+}
+
 document.getElementById('btn-camera').addEventListener('click', async () => {
   try {
     camModal.style.display = 'flex';
