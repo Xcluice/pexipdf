@@ -105,10 +105,7 @@
   }
   @keyframes gridDrift { to { transform: translate(26px, 26px); } }
 
-  .app-shell {
-    position: relative; z-index: 2; height: 100%; width: 100%; max-width: 540px;
-    margin: 0 auto; display: flex; flex-direction: column;
-  }
+  .app-shell { position: relative; z-index: 2; height: 100%; width: 100%; max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; }
 
   .app-topbar {
     position: sticky; top: 0; z-index: 30; height: calc(var(--topbar-h) + var(--safe-top));
@@ -116,10 +113,7 @@
     background: var(--bar-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border); flex-shrink: 0;
   }
-  .app-brand-mark {
-    width: 36px; height: 36px; border-radius: 11px; background: var(--ink); color: var(--on-ink);
-    display: grid; place-items: center; flex-shrink: 0; box-shadow: var(--shadow);
-  }
+  .app-brand-mark { width: 36px; height: 36px; border-radius: 11px; background: var(--ink); color: var(--on-ink); display: grid; place-items: center; flex-shrink: 0; box-shadow: var(--shadow); }
   .app-brand-mark svg { width: 20px; height: 20px; display: block; }
   .topbar-titles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
   .topbar-title-row { display: flex; align-items: baseline; gap: 6px; }
@@ -131,25 +125,14 @@
   @keyframes flipIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 
   .topbar-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-  .top-pill {
-    display: none; align-items: center; gap: 5px; height: 32px; padding: 0 11px; border-radius: 999px;
-    background: var(--accent-soft); color: var(--accent); border: 1px solid transparent;
-    font-size: 11.5px; font-weight: 600; cursor: pointer; transition: transform .2s var(--spring);
-  }
+  .top-pill { display: none; align-items: center; gap: 5px; height: 32px; padding: 0 11px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); border: 1px solid transparent; font-size: 11.5px; font-weight: 600; cursor: pointer; transition: transform .2s var(--spring); }
   .top-pill:active { transform: scale(0.94); }
   .top-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-  .icon-btn {
-    width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border);
-    color: var(--text); display: grid; place-items: center; cursor: pointer; font-size: 15px;
-    transition: transform .25s var(--spring), border-color .2s;
-  }
+  .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--text); display: grid; place-items: center; cursor: pointer; font-size: 15px; transition: transform .25s var(--spring), border-color .2s; }
   .icon-btn:active { transform: scale(0.9); }
   .icon-btn svg { width: 17px; height: 17px; }
 
-  #app-scroll {
-    flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
-    padding: 16px 16px calc(var(--bnav-h) + var(--safe-bot) + 24px); scroll-behavior: smooth;
-  }
+  #app-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: 16px 16px calc(var(--bnav-h) + var(--safe-bot) + 24px); scroll-behavior: smooth; }
   #app-scroll::-webkit-scrollbar { width: 0; height: 0; }
 
   .app-screen { display: none; flex-direction: column; gap: 16px; }
@@ -158,43 +141,25 @@
 
   .section-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: -6px; padding: 2px 2px 0; }
   .section-label { font-size: 11.5px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; color: var(--muted); }
-  .offline-pill {
-    display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600;
-    color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 3px 9px; border-radius: 999px;
-  }
+  .offline-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 3px 9px; border-radius: 999px; }
   .offline-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: dotPulse 2.4s ease-out infinite; }
   @keyframes dotPulse { 0% { box-shadow: 0 0 0 0 rgba(77, 184, 135, 0.55); } 75%, 100% { box-shadow: 0 0 0 6px rgba(77, 184, 135, 0); } }
 
-  #dropzone.hero-card {
-    position: relative; overflow: hidden; background: var(--ink); color: var(--on-ink);
-    border: 1px solid var(--ink); border-radius: 26px; padding: 22px 20px 20px; min-height: 158px;
-    display: flex; flex-direction: column; justify-content: space-between; gap: 14px;
-    cursor: pointer; box-shadow: var(--shadow-md); transition: transform .25s var(--ease);
-  }
+  #dropzone.hero-card { position: relative; overflow: hidden; background: var(--ink); color: var(--on-ink); border: 1px solid var(--ink); border-radius: 26px; padding: 22px 20px 20px; min-height: 158px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; cursor: pointer; box-shadow: var(--shadow-md); transition: transform .25s var(--ease); }
   #dropzone.hero-card:active, #dropzone.hero-card.hover { transform: scale(0.985); }
   #dropzone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 5; }
   .hero-top { display: flex; align-items: flex-start; justify-content: space-between; position: relative; z-index: 2; }
-  .drop-icon {
-    width: 46px; height: 46px; padding: 11px; border-radius: 15px;
-    background: rgba(128, 128, 128, 0.18); border: 1px solid rgba(128, 128, 128, 0.34);
-    color: var(--on-ink); display: grid; place-items: center;
-  }
+  .drop-icon { width: 46px; height: 46px; padding: 11px; border-radius: 15px; background: rgba(128, 128, 128, 0.18); border: 1px solid rgba(128, 128, 128, 0.34); color: var(--on-ink); display: grid; place-items: center; }
   .drop-icon svg { width: 100%; height: 100%; }
   .hero-chip { font-size: 10.5px; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: rgba(128, 128, 128, 0.18); color: var(--on-ink); }
   .hero-copy { position: relative; z-index: 2; }
   .drop-title { font-size: 18px; font-weight: 700; letter-spacing: -0.25px; color: var(--on-ink); }
   .drop-sub { font-size: 12px; color: var(--on-ink); opacity: 0.72; margin-top: 3px; }
-  #dropzone .ring {
-    position: absolute; right: 24px; top: 24px; width: 46px; height: 46px; border-radius: 50%;
-    border: 1.5px solid var(--on-ink); opacity: 0; animation: ring 3s ease-out infinite; pointer-events: none;
-  }
+  #dropzone .ring { position: absolute; right: 24px; top: 24px; width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid var(--on-ink); opacity: 0; animation: ring 3s ease-out infinite; pointer-events: none; }
   #dropzone .ring.r2 { animation-delay: 1.5s; }
   @keyframes ring { 0% { transform: scale(.55); opacity: .55; } 100% { transform: scale(2.8); opacity: 0; } }
 
-  #home-workspace-banner {
-    display: none; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--accent);
-    border-radius: 18px; padding: 13px 15px; cursor: pointer; box-shadow: var(--shadow); transition: transform .2s var(--spring);
-  }
+  #home-workspace-banner { display: none; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--accent); border-radius: 18px; padding: 13px 15px; cursor: pointer; box-shadow: var(--shadow); transition: transform .2s var(--spring); }
   #home-workspace-banner:active { transform: scale(0.98); }
   .ws-icon { width: 36px; height: 36px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex-shrink: 0; }
   .ws-info { flex: 1; min-width: 0; }
@@ -203,17 +168,9 @@
   .ws-go { font-size: 12px; font-weight: 600; color: var(--accent); white-space: nowrap; }
 
   .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; width: 100%; }
-  .tool {
-    --c1: var(--accent); position: relative; overflow: hidden; border: 1px solid var(--border); border-radius: 22px;
-    padding: 16px 15px; min-height: 116px; color: var(--text); text-align: left; cursor: pointer;
-    display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
-    background: var(--surface); box-shadow: var(--shadow); transition: transform .22s var(--spring), border-color .2s;
-  }
+  .tool { --c1: var(--accent); position: relative; overflow: hidden; border: 1px solid var(--border); border-radius: 22px; padding: 16px 15px; min-height: 116px; color: var(--text); text-align: left; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; background: var(--surface); box-shadow: var(--shadow); transition: transform .22s var(--spring), border-color .2s; }
   .tool:active { transform: scale(0.96); border-color: var(--border-strong); background: var(--surface-elev); }
-  .tool .t-ico-wrap {
-    width: 38px; height: 38px; border-radius: 12px; background: var(--surface-sunken);
-    border: 1px solid var(--border); display: grid; place-items: center; position: relative; color: var(--text);
-  }
+  .tool .t-ico-wrap { width: 38px; height: 38px; border-radius: 12px; background: var(--surface-sunken); border: 1px solid var(--border); display: grid; place-items: center; position: relative; color: var(--text); }
   .tool .t-ico-wrap::after { content: ''; position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; border-radius: 50%; background: var(--c1); border: 2px solid var(--surface); }
   .tool .t-ico { width: 19px; height: 19px; display: block; }
   .tool .t-name { font-weight: 600; font-size: 14px; color: var(--text); line-height: 1.2; }
@@ -228,10 +185,7 @@
   @keyframes marq { to { transform: translateX(-50%); } }
 
   .android-group { background: var(--surface); border: 1px solid var(--border); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow); }
-  .tool-row {
-    width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border);
-    padding: 14px 16px; display: flex; align-items: center; gap: 13px; text-align: left; color: var(--text); cursor: pointer;
-  }
+  .tool-row { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; gap: 13px; text-align: left; color: var(--text); cursor: pointer; }
   .tool-row:last-child { border-bottom: none; }
   .tool-row:active { background: var(--surface-sunken); }
   .tr-ico { width: 40px; height: 40px; border-radius: 13px; background: var(--surface-sunken); border: 1px solid var(--border); display: grid; place-items: center; flex-shrink: 0; color: var(--text); position: relative; }
@@ -251,20 +205,13 @@
   .pages-title { font-size: 16px; font-weight: 700; color: var(--text); }
   .preview-actions { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 2px; }
   .preview-actions::-webkit-scrollbar { display: none; }
-  .clear-btn, .undo-btn, .pill-action {
-    background: var(--surface); border: 1px solid var(--border); color: var(--text);
-    font-size: 12px; font-weight: 600; padding: 8px 13px; border-radius: 999px; cursor: pointer; white-space: nowrap;
-  }
+  .clear-btn, .undo-btn, .pill-action { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 12px; font-weight: 600; padding: 8px 13px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
   .pill-action.primary { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
   .undo-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
   #grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   @media (max-width: 360px) { #grid { grid-template-columns: repeat(2, 1fr); } }
-  .thumb {
-    position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 3 / 4;
-    background: var(--surface); border: 1.5px solid var(--border); cursor: grab; box-shadow: var(--shadow);
-    animation: popIn .38s var(--spring) both;
-  }
+  .thumb { position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 3 / 4; background: var(--surface); border: 1.5px solid var(--border); cursor: grab; box-shadow: var(--shadow); animation: popIn .38s var(--spring) both; }
   @keyframes popIn { from { opacity: 0; transform: scale(0.84); } to { opacity: 1; transform: none; } }
   .thumb.selected-thumb { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
   .thumb.dragging { opacity: 0.4; transform: scale(0.95); }
@@ -280,11 +227,7 @@
   #info-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 10px 14px; border-radius: 14px; }
   #info-bar b { color: var(--text); font-weight: 600; }
 
-  #gen-btn {
-    width: 100%; height: 54px; background: var(--ink); color: var(--on-ink); border: none; border-radius: 999px;
-    font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center;
-    gap: 8px; box-shadow: var(--shadow-md); position: relative; overflow: hidden;
-  }
+  #gen-btn { width: 100%; height: 54px; background: var(--ink); color: var(--on-ink); border: none; border-radius: 999px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: var(--shadow-md); position: relative; overflow: hidden; }
   #gen-btn::after { content: ''; position: absolute; top: 0; bottom: 0; width: 70px; left: -100px; background: linear-gradient(90deg, transparent, rgba(128,128,128,.38), transparent); transform: skewX(-20deg); animation: sweep 3.6s ease-in-out infinite; }
   @keyframes sweep { 0%,45% { left: -100px; } 100% { left: 125%; } }
   #gen-btn:active { transform: scale(0.975); }
@@ -347,12 +290,7 @@
   .nup-btn.active { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
   .nup-btn.active i b { background: var(--on-ink); }
 
-  .bottom-nav {
-    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 540px;
-    height: calc(var(--bnav-h) + var(--safe-bot)); padding: 6px 10px calc(6px + var(--safe-bot));
-    background: var(--bar-bg); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
-    border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(4, 1fr); z-index: 40;
-  }
+  .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 540px; height: calc(var(--bnav-h) + var(--safe-bot)); padding: 6px 10px calc(6px + var(--safe-bot)); background: var(--bar-bg); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(4, 1fr); z-index: 40; }
   .bnav-item { background: none; border: none; color: var(--muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; position: relative; }
   .bnav-pill { width: 54px; height: 30px; border-radius: 999px; display: grid; place-items: center; position: relative; transition: background .25s var(--ease), transform .25s var(--spring); }
   .bnav-pill svg { width: 20px; height: 20px; stroke-width: 1.9; }
@@ -362,17 +300,9 @@
   .bnav-item:active .bnav-pill { transform: scale(0.92); }
   .bnav-badge { position: absolute; top: 1px; right: 8px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; background: var(--accent); color: var(--bg); font-size: 10px; font-weight: 700; display: none; align-items: center; justify-content: center; }
 
-  .modal-overlay {
-    position: fixed; inset: 0; background: var(--sheet-scrim); z-index: 100; display: none;
-    flex-direction: column; align-items: center; justify-content: flex-end; backdrop-filter: blur(4px);
-  }
+  .modal-overlay { position: fixed; inset: 0; background: var(--sheet-scrim); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: flex-end; backdrop-filter: blur(4px); }
   @media (min-width: 600px) { .modal-overlay { justify-content: center; padding: 20px; } }
-  .modal-box {
-    background: var(--surface); border-radius: 28px 28px 0 0; width: 100%; max-width: 540px;
-    padding: 10px 20px calc(20px + var(--safe-bot)); display: flex; flex-direction: column; gap: 14px;
-    box-shadow: var(--shadow-md); border-top: 1px solid var(--border); max-height: 90vh; overflow-y: auto;
-    animation: sheetUp .34s var(--ease) both;
-  }
+  .modal-box { background: var(--surface); border-radius: 28px 28px 0 0; width: 100%; max-width: 540px; padding: 10px 20px calc(20px + var(--safe-bot)); display: flex; flex-direction: column; gap: 14px; box-shadow: var(--shadow-md); border-top: 1px solid var(--border); max-height: 90vh; overflow-y: auto; animation: sheetUp .34s var(--ease) both; }
   @media (min-width: 600px) { .modal-box { border-radius: 26px; border: 1px solid var(--border); padding: 16px 22px 22px; } }
   @keyframes sheetUp { from { opacity: 0; transform: translateY(48px); } to { opacity: 1; transform: none; } }
   .sheet-handle { width: 38px; height: 4px; border-radius: 999px; background: var(--border-strong); margin: 2px auto 4px; flex-shrink: 0; }
@@ -384,13 +314,18 @@
   .btn-primary { height: 44px; background: var(--ink); color: var(--on-ink); border: none; padding: 0 20px; border-radius: 999px; cursor: pointer; font-weight: 700; font-size: 13.5px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
   .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
 
-  #camera-modal { justify-content: center; padding: var(--safe-top) 12px calc(16px + var(--safe-bot)); background: #000; }
-  #video-stream { flex: 1; width: 100%; max-height: calc(100vh - 140px); object-fit: cover; background: #111; border-radius: 22px; }
-  .cam-controls { height: 96px; width: 100%; display: flex; align-items: center; justify-content: space-around; margin-top: 10px; }
-  .cam-close { background: rgba(255,255,255,.15); border: none; color: #fff; font-size: 14px; font-weight: 600; padding: 10px 18px; border-radius: 999px; cursor: pointer; }
-  .cam-snap { width: 68px; height: 68px; border-radius: 50%; background: #fff; border: 4px solid rgba(255,255,255,.4); cursor: pointer; }
-  .cam-count { color: #fff; font-weight: 700; font-size: 16px; width: 58px; text-align: center; }
-  #cam-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; transition: opacity .08s; }
+  /* Fast Camera Scanner Modal */
+  #camera-modal { justify-content: space-between; padding: calc(12px + var(--safe-top)) 12px calc(16px + var(--safe-bot)); background: #000; }
+  .cam-top-bar { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px 10px; z-index: 4; }
+  .cam-pill-btn { background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.14); color: #fff; font-size: 12.5px; font-weight: 600; padding: 8px 14px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .cam-pill-btn:active { transform: scale(0.95); }
+  #video-stream { flex: 1; width: 100%; min-height: 0; object-fit: cover; background: #111; border-radius: 22px; }
+  .cam-controls { height: 92px; width: 100%; display: flex; align-items: center; justify-content: space-around; margin-top: 10px; flex-shrink: 0; }
+  .cam-close { background: rgba(255,255,255,.16); border: none; color: #fff; font-size: 14px; font-weight: 600; padding: 10px 20px; border-radius: 999px; cursor: pointer; }
+  .cam-snap { width: 70px; height: 70px; border-radius: 50%; background: #fff; border: 4px solid rgba(255,255,255,.4); cursor: pointer; transition: transform .12s var(--spring); }
+  .cam-snap:active { transform: scale(0.86); }
+  .cam-count { color: #fff; font-weight: 700; font-size: 16px; min-width: 64px; text-align: center; background: rgba(255,255,255,.14); padding: 8px 14px; border-radius: 999px; }
+  #cam-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; transition: opacity .06s; z-index: 6; }
 
   .tb-title-row { display: flex; gap: 8px; }
   .tb-title-input { flex: 1; font-weight: 600; }
@@ -415,11 +350,7 @@
   .crop-container { width: 100%; height: 55vh; background: #111; border-radius: 16px; overflow: hidden; }
   .modal-name-input { width: 100%; }
 
-  #compress-drop, #compress-video-drop, .gt-drop {
-    background: var(--surface-sunken); border: 1.5px dashed var(--border-strong); border-radius: 18px;
-    padding: 26px 16px; text-align: center; cursor: pointer; position: relative;
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-  }
+  #compress-drop, #compress-video-drop, .gt-drop { background: var(--surface-sunken); border: 1.5px dashed var(--border-strong); border-radius: 18px; padding: 26px 16px; text-align: center; cursor: pointer; position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; }
   #compress-drop input, #compress-video-drop input, .gt-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
   #compress-drop .drop-title, #compress-video-drop .drop-title, .gt-drop .drop-title { color: var(--text); font-size: 14px; }
   #compress-drop .drop-sub, #compress-video-drop .drop-sub, .gt-drop .drop-sub { color: var(--muted); font-size: 12px; opacity: 1; }
@@ -458,13 +389,7 @@
   .lb-nav-btn { background: rgba(255,255,255,.16); border: none; color: #fff; width: 42px; height: 42px; border-radius: 50%; font-size: 20px; cursor: pointer; display: grid; place-items: center; }
   #lightbox-label { color: rgba(255,255,255,.8); font-size: 13px; font-weight: 600; min-width: 60px; text-align: center; }
 
-  #toast {
-    position: fixed; bottom: calc(var(--bnav-h) + var(--safe-bot) + 14px); left: 50%;
-    transform: translateX(-50%) translateY(16px) scale(0.95); background: var(--ink); color: var(--on-ink);
-    padding: 11px 18px; border-radius: 999px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none;
-    transition: opacity .22s var(--ease), transform .3s var(--spring); z-index: 300; box-shadow: var(--shadow-md);
-    max-width: calc(100vw - 32px); white-space: nowrap;
-  }
+  #toast { position: fixed; bottom: calc(var(--bnav-h) + var(--safe-bot) + 14px); left: 50%; transform: translateX(-50%) translateY(16px) scale(0.95); background: var(--ink); color: var(--on-ink); padding: 11px 18px; border-radius: 999px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .22s var(--ease), transform .3s var(--spring); z-index: 300; box-shadow: var(--shadow-md); max-width: calc(100vw - 32px); white-space: nowrap; }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
   #confetti { position: fixed; inset: 0; z-index: 400; pointer-events: none; }
   .rip-host { position: relative; overflow: hidden; }
@@ -717,7 +642,11 @@
 </div>
 
 <div id="camera-modal" class="modal-overlay">
-  <video id="video-stream" autoplay playsinline></video>
+  <div class="cam-top-bar">
+    <button type="button" class="cam-pill-btn" id="cam-flip-btn">↻ Flip</button>
+    <button type="button" class="cam-pill-btn" id="cam-native-btn" style="display:none;">📷 System Camera</button>
+  </div>
+  <video id="video-stream" autoplay playsinline muted></video>
   <div id="cam-flash"></div>
   <div class="cam-controls">
     <button type="button" class="cam-close" id="cam-close-btn">Done</button>
@@ -992,29 +921,106 @@ async function processPdf(file) {
 }
 
 // ─── CAMERA CAPTURE ───────────────────────────────────────────────────────────
+let camFacing = 'environment';
+let camSnapping = false;
+
+async function startCameraStream(facing) {
+  if (currentMediaStream) {
+    currentMediaStream.getTracks().forEach(t => t.stop());
+    currentMediaStream = null;
+  }
+  const constraintsList = [
+    { video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false },
+    { video: { facingMode: facing }, audio: false },
+    { video: true, audio: false }
+  ];
+  let stream = null;
+  let lastErr = null;
+  for (const c of constraintsList) {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia(c);
+      break;
+    } catch (e) { lastErr = e; }
+  }
+  if (!stream) throw lastErr || new Error('Camera unavailable');
+  currentMediaStream = stream;
+  videoStream.srcObject = stream;
+  videoStream.muted = true;
+  videoStream.playsInline = true;
+  await videoStream.play().catch(() => {});
+}
+
 document.getElementById('btn-camera').addEventListener('click', async () => {
   try {
-    currentMediaStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
-    });
-    videoStream.srcObject = currentMediaStream; camModal.style.display = 'flex'; camCounter.textContent = images.length;
-  } catch(err) { showToast('Camera unavailable'); }
+    camModal.style.display = 'flex';
+    camCounter.textContent = images.length;
+    await startCameraStream(camFacing);
+  } catch (err) {
+    camModal.style.display = 'none';
+    if (window.PexiBridge && window.PexiBridge.openNativeCamera) {
+      window.PexiBridge.openNativeCamera();
+    } else {
+      showToast('Camera unavailable — check camera permission');
+    }
+  }
+});
+
+document.getElementById('cam-flip-btn')?.addEventListener('click', async () => {
+  camFacing = camFacing === 'environment' ? 'user' : 'environment';
+  try { await startCameraStream(camFacing); } catch (_) { showToast('Could not switch camera'); }
+});
+
+document.getElementById('cam-native-btn')?.addEventListener('click', () => {
+  if (window.PexiBridge && window.PexiBridge.openNativeCamera) {
+    if (currentMediaStream) { currentMediaStream.getTracks().forEach(t => t.stop()); currentMediaStream = null; }
+    videoStream.srcObject = null;
+    camModal.style.display = 'none';
+    window.PexiBridge.openNativeCamera();
+  }
 });
 
 document.getElementById('cam-close-btn').addEventListener('click', () => {
-  if (currentMediaStream) currentMediaStream.getTracks().forEach(t => t.stop());
-  camModal.style.display = 'none'; renderGrid();
+  if (currentMediaStream) {
+    currentMediaStream.getTracks().forEach(t => t.stop());
+    currentMediaStream = null;
+  }
+  videoStream.srcObject = null;
+  camModal.style.display = 'none';
+  renderGrid();
 });
 
 document.getElementById('cam-snap-btn').addEventListener('click', () => {
-  if (!videoStream.videoWidth) return;
-  document.getElementById('cam-flash').style.opacity = '1'; setTimeout(() => document.getElementById('cam-flash').style.opacity = '0', 100);
-  hiddenCanvas.width = videoStream.videoWidth; hiddenCanvas.height = videoStream.videoHeight;
-  hiddenCtx.drawImage(videoStream, 0, 0);
+  if (camSnapping || !videoStream.videoWidth || !videoStream.videoHeight) return;
+  camSnapping = true;
+  const flash = document.getElementById('cam-flash');
+  flash.style.opacity = '0.85';
+  setTimeout(() => { flash.style.opacity = '0'; }, 75);
+
+  const vw = videoStream.videoWidth, vh = videoStream.videoHeight;
+  const maxSide = 1440;
+  const scale = Math.min(1, maxSide / Math.max(vw, vh));
+  const tw = Math.round(vw * scale), th = Math.round(vh * scale);
+  if (hiddenCanvas.width !== tw || hiddenCanvas.height !== th) {
+    hiddenCanvas.width = tw;
+    hiddenCanvas.height = th;
+  }
+  hiddenCtx.drawImage(videoStream, 0, 0, tw, th);
+  const nextCount = images.length + 1;
+  camCounter.textContent = nextCount;
   hiddenCanvas.toBlob(blob => {
-    images.push({ file: blob, url: URL.createObjectURL(blob), name: 'photo_' + Date.now() + '.jpg', size: blob.size, rotation: 0, selected: false });
-    camCounter.textContent = images.length; showToast('📸 Photo captured');
-  }, 'image/jpeg', 0.92);
+    camSnapping = false;
+    if (!blob) return;
+    images.push({
+      file: blob,
+      url: URL.createObjectURL(blob),
+      name: 'scan_' + Date.now() + '.jpg',
+      size: blob.size,
+      rotation: 0,
+      selected: false
+    });
+    camCounter.textContent = images.length;
+    showToast('📸 Page ' + images.length + ' captured', 1200);
+  }, 'image/jpeg', 0.84);
 });
 
 // ─── TEXT NOTE CONVERT ENGINE ────────────────────────────────────────────────
@@ -1439,8 +1445,8 @@ function renderGrid() {
   if (window.__pexiSyncPages) window.__pexiSyncPages(images.length);
   const grid = document.getElementById('grid'); const sec = document.getElementById('preview-section');
   const empty = document.getElementById('empty'); const genBtn = document.getElementById('gen-btn');
-  if (!images.length) { sec.style.display = 'none'; empty.style.display = 'block'; document.getElementById('est-size-bar').style.display = 'none'; return; }
-  sec.style.display = 'block'; empty.style.display = 'none';
+  if (!images.length) { sec.style.display = 'none'; empty.style.display = 'flex'; document.getElementById('est-size-bar').style.display = 'none'; return; }
+  sec.style.display = 'flex'; empty.style.display = 'none';
   document.getElementById('count').textContent = images.length; document.getElementById('ib-pages').textContent = images.length;
   document.getElementById('ib-size').textContent = (images.reduce((s,i) => s + (i.size || 0), 0) / 1024).toFixed(1) + ' KB';
 
@@ -2166,7 +2172,6 @@ $('gt-run').addEventListener('click', async () => {
     });
 })();
 
-
 // ─── ANDROID APP SHELL · TABS · BOTTOM SHEETS · NATIVE BRIDGE ────────────────
 (function () {
   const tabs = ['home', 'pages', 'tools', 'settings'];
@@ -2222,17 +2227,35 @@ $('gt-run').addEventListener('click', async () => {
     prevPageCount = n;
   };
 
-  const topPill = document.getElementById('top-pages-pill');
-  if (topPill) topPill.addEventListener('click', () => switchTab('pages'));
-  const wsBtn = document.getElementById('home-workspace-banner');
-  if (wsBtn) wsBtn.addEventListener('click', () => switchTab('pages'));
+  // Receive photo captured by Android native system camera
+  window.__pexiAddCapturedPhoto = function (base64, name, size) {
+    try {
+      const bin = atob(base64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const blob = new Blob([bytes], { type: 'image/jpeg' });
+      images.push({
+        file: blob,
+        url: URL.createObjectURL(blob),
+        name: name || ('scan_' + Date.now() + '.jpg'),
+        size: size || blob.size,
+        rotation: 0,
+        selected: false
+      });
+      renderGrid();
+      switchTab('pages');
+      showToast('📸 Photo added to Pages');
+    } catch (e) {
+      console.error(e);
+      showToast('Could not import captured photo');
+    }
+  };
 
-  const addMoreBtn = document.getElementById('pages-add-btn');
-  if (addMoreBtn) addMoreBtn.addEventListener('click', () => document.getElementById('file-input').click());
-  const emptyBrowseBtn = document.getElementById('empty-browse-btn');
-  if (emptyBrowseBtn) emptyBrowseBtn.addEventListener('click', () => document.getElementById('file-input').click());
-  const emptyCamBtn = document.getElementById('empty-cam-btn');
-  if (emptyCamBtn) emptyCamBtn.addEventListener('click', () => document.getElementById('btn-camera').click());
+  document.getElementById('top-pages-pill')?.addEventListener('click', () => switchTab('pages'));
+  document.getElementById('home-workspace-banner')?.addEventListener('click', () => switchTab('pages'));
+  document.getElementById('pages-add-btn')?.addEventListener('click', () => document.getElementById('file-input').click());
+  document.getElementById('empty-browse-btn')?.addEventListener('click', () => document.getElementById('file-input').click());
+  document.getElementById('empty-cam-btn')?.addEventListener('click', () => document.getElementById('btn-camera').click());
 
   document.querySelectorAll('[data-trigger]').forEach(el => {
     el.addEventListener('click', () => {
@@ -2311,11 +2334,29 @@ $('gt-run').addEventListener('click', async () => {
     });
   }
 
+  // Chunked streaming transfer to native Android (safe for large PDFs & videos)
+  async function streamBlobToAndroid(blob, filename, mime, mode) {
+    if (window.PexiBridge && window.PexiBridge.beginTransfer) {
+      const id = 'tx_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+      const chunkBytes = 384 * 1024; // 384 KB raw -> ~512 KB base64
+      window.PexiBridge.beginTransfer(id, filename || 'pexipdf_output', mime || blob.type || 'application/octet-stream', mode);
+      for (let off = 0; off < blob.size; off += chunkBytes) {
+        const slice = blob.slice(off, Math.min(blob.size, off + chunkBytes));
+        const b64 = await blobToBase64(slice);
+        window.PexiBridge.appendTransfer(id, b64);
+      }
+      window.PexiBridge.finishTransfer(id);
+      return;
+    }
+    const b64 = await blobToBase64(blob);
+    if (mode === 'share') window.PexiBridge.shareFile(b64, filename, mime);
+    else window.PexiBridge.saveFile(b64, filename, mime);
+  }
+
   window.__pexiShareBlob = async function (blob, filename, mime) {
     try {
       showToast('Preparing share…', 1500);
-      const b64 = await blobToBase64(blob);
-      window.PexiBridge.shareFile(b64, filename || 'PexiPDF_output.pdf', mime || blob.type || 'application/pdf');
+      await streamBlobToAndroid(blob, filename || 'PexiPDF_output.pdf', mime || blob.type || 'application/pdf', 'share');
     } catch (err) {
       showToast('Could not share file');
     }
@@ -2325,7 +2366,7 @@ $('gt-run').addEventListener('click', async () => {
     const a = document.getElementById(anchorId);
     if (!a) return;
     a.addEventListener('click', async e => {
-      if (!window.PexiBridge || !window.PexiBridge.saveFile) return;
+      if (!window.PexiBridge || (!window.PexiBridge.saveFile && !window.PexiBridge.beginTransfer)) return;
       const href = a.getAttribute('href') || '';
       if (!href.startsWith('blob:')) return;
       e.preventDefault();
@@ -2333,10 +2374,9 @@ $('gt-run').addEventListener('click', async () => {
         showToast('Saving to Downloads/PexiPDF…', 1800);
         const resp = await fetch(href);
         const blob = await resp.blob();
-        const b64 = await blobToBase64(blob);
         const fname = a.getAttribute('download') || 'pexipdf_output';
         const mime = blob.type || 'application/octet-stream';
-        window.PexiBridge.saveFile(b64, fname, mime);
+        await streamBlobToAndroid(blob, fname, mime, 'save');
       } catch (err) {
         console.error(err);
         showToast('Save failed');
@@ -2349,8 +2389,10 @@ $('gt-run').addEventListener('click', async () => {
   const aboutVerEl = document.getElementById('about-version-pill');
   const updateBtn = document.getElementById('settings-update-row');
   const aboutUpdateBtn = document.getElementById('about-update-btn');
+  const nativeCamBtn = document.getElementById('cam-native-btn');
   if (window.PexiBridge) {
     document.documentElement.classList.add('is-android-app');
+    if (nativeCamBtn) nativeCamBtn.style.display = 'inline-flex';
     try {
       const v = window.PexiBridge.getAppVersion ? window.PexiBridge.getAppVersion() : '1.0.0';
       if (verEl) verEl.textContent = 'v' + v;
