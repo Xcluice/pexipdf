@@ -10,6 +10,28 @@
     sepia: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>'
   };
 
+
+  const TOAST_SVGS = {
+    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+  };
+  let _toastTimer = null;
+  window.showToast = function (msg, duration, type) {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    const ico = document.getElementById('toast-ico');
+    const txt = document.getElementById('toast-msg');
+    const low = String(msg || '').toLowerCase();
+    const kind = type || (/(fail|error|could not|unable|denied|incorrect|needed|required)/.test(low) ? 'error' : (/(saved|copied|added|captured|up to date|resumed)/.test(low) ? 'success' : 'info'));
+    if (ico) ico.innerHTML = TOAST_SVGS[kind] || TOAST_SVGS.info;
+    if (txt) txt.textContent = String(msg || '');
+    else t.textContent = String(msg || '');
+    t.className = 'show toast-' + kind;
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => { t.classList.remove('show'); }, duration || 2400);
+  };
+
   const bnavInd = document.getElementById('bnav-indicator');
   function moveNavPill(idx, animate) {
     if (!bnavInd) return;
@@ -135,7 +157,7 @@
       else if (overlay.id === 'gt-modal') document.getElementById('gt-close')?.click();
       else if (overlay.id === 'about-modal') closeAbout();
       else if (overlay.id === 'pv-jump-modal') overlay.classList.remove('open');
-      else if (overlay.id === 'pv-pass-modal') { overlay.classList.remove('open'); pendingLockedPdf = null; }
+      else if (overlay.id === 'pv-pass-modal') { document.getElementById('pv-pass-cancel')?.click(); }
     });
   });
 
@@ -270,7 +292,7 @@
     pvDevList.classList.toggle('is-grid', pvViewMode === 'grid');
     if (pvDevCount) pvDevCount.textContent = filtered.length ? `${filtered.length} PDF${filtered.length === 1 ? '' : 's'}` : '';
     if (!filtered.length) {
-      pvDevList.innerHTML = `<div class="pv-dev-empty">${q ? 'No matching PDFs found.' : 'No PDFs found on device yet. Tap Browse PDF above or allow storage access.'}</div>`;
+      pvDevList.innerHTML = `<div class="pv-dev-empty">${q ? 'No matching PDFs found.' : 'No PDFs found on device yet. Allow storage access to scan your PDFs.'}</div>`;
       return;
     }
     const readPos = getReadPositions();
@@ -602,6 +624,38 @@
     }
   }
 
+  function pvShowLoadingSkeleton(name) {
+    if (!pvStage || !pvPages) return;
+    pvTitle.textContent = name || 'Loading PDF…';
+    pvPagePill.textContent = '…';
+    pvProgFill.style.width = '18%';
+    pvStage.classList.remove('pv-immersive');
+    pvThumbs.style.display = 'none';
+    pvSearchBar.style.display = 'none';
+    pvEmpty.style.display = 'none';
+    pvStage.style.display = 'flex';
+    pvPages.className = `pv-pages theme-${PV.theme} mode-${PV.mode}`;
+    pvPages.innerHTML = `
+      <div class="pv-load-wrap">
+        <div class="pv-load-card">
+          <div class="pv-shimmer-line title"></div>
+          <div class="pv-shimmer-line"></div>
+          <div class="pv-shimmer-line med"></div>
+          <div class="pv-shimmer-line short"></div>
+          <div class="pv-shimmer-block"></div>
+          <div class="pv-shimmer-line"></div>
+          <div class="pv-shimmer-line med"></div>
+          <div class="pv-shimmer-line short"></div>
+        </div>
+        <div class="pv-load-card">
+          <div class="pv-shimmer-line title"></div>
+          <div class="pv-shimmer-line med"></div>
+          <div class="pv-shimmer-line"></div>
+          <div class="pv-shimmer-line short"></div>
+        </div>
+      </div>`;
+  }
+
   let pendingLockedPdf = null;
   const pvPassModal = document.getElementById('pv-pass-modal');
   const pvPassInput = document.getElementById('pv-pass-input');
@@ -613,7 +667,7 @@
       return;
     }
     try {
-      if (!password) showToast('Opening PDF…', 1200);
+      if (!password) { switchTab('viewer', { keepScroll: true }); pvShowLoadingSkeleton(filename); }
       const pdfjs = window['pdfjs-dist/build/pdf'];
       const opts = { data: uint8.slice() };
       if (password) opts.password = password;
@@ -659,12 +713,18 @@
         return;
       }
       console.error(err);
-      showToast('Could not open PDF');
+      if (!PV.doc) { pvPages.innerHTML = ''; pvStage.style.display = 'none'; pvEmpty.style.display = 'flex'; }
+      showToast('Could not open PDF', 2400, 'error');
     }
   }
   document.getElementById('pv-pass-cancel')?.addEventListener('click', () => {
     pvPassModal?.classList.remove('open');
     pendingLockedPdf = null;
+    if (!PV.doc) {
+      pvPages.innerHTML = '';
+      pvStage.style.display = 'none';
+      pvEmpty.style.display = 'flex';
+    }
   });
   document.getElementById('pv-pass-unlock')?.addEventListener('click', () => {
     if (!pendingLockedPdf) return;
@@ -941,7 +1001,7 @@
     extPdfChunks = [];
     extPdfName = name || 'document.pdf';
     switchTab('viewer', { keepScroll: true });
-    showToast('Opening ' + extPdfName + '…', 1500);
+    pvShowLoadingSkeleton(extPdfName);
   };
   window.__pexiExternalPdfChunk = function (b64) {
     extPdfChunks.push(b64);
@@ -967,6 +1027,14 @@
   };
 
   window.__pexiBack = function () {
+    if (pvPassModal && pvPassModal.classList.contains('open')) {
+      document.getElementById('pv-pass-cancel')?.click();
+      return true;
+    }
+    if (pvJumpModal && pvJumpModal.classList.contains('open')) {
+      pvJumpModal.classList.remove('open');
+      return true;
+    }
     const lb = document.getElementById('lightbox');
     if (lb && lb.style.display === 'flex') {
       document.getElementById('lightbox-close')?.click();
