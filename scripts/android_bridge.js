@@ -14,13 +14,11 @@
   function moveNavPill(idx, animate) {
     if (!bnavInd) return;
     if (!animate) bnavInd.style.transition = 'none';
-    bnavInd.classList.add('gliding');
-    bnavInd.style.transform = `translateX(${idx * 100}%)`;
+    bnavInd.style.transform = `translate3d(${idx * 100}%, 0, 0)`;
     if (!animate) {
       void bnavInd.offsetWidth;
       bnavInd.style.transition = '';
     }
-    setTimeout(() => bnavInd.classList.remove('gliding'), 420);
   }
 
   function switchTab(tab, opts) {
@@ -56,15 +54,7 @@
   }
   moveNavPill(0, false);
 
-  const sheetObserver = new MutationObserver(() => {
-    const anyOpen = Array.from(document.querySelectorAll('.modal-overlay')).some(
-      m => m.id !== 'camera-modal' && m.style.display && m.style.display !== 'none'
-    );
-    document.body.classList.toggle('sheet-open', anyOpen);
-  });
-  document.querySelectorAll('.modal-overlay').forEach(m => {
-    sheetObserver.observe(m, { attributes: true, attributeFilter: ['style'] });
-  });
+
   window.__pexiSwitchTab = switchTab;
 
   document.querySelectorAll('.bnav-item').forEach(btn => {
@@ -402,30 +392,97 @@
   const pvThemeBtn = document.getElementById('pv-theme-btn');
   const pvModeBtn = document.getElementById('pv-mode-btn');
 
+  let _savePosTimer = null;
   function pvUpdateMeta() {
     if (!PV.numPages) return;
     pvPagePill.textContent = `${PV.curPage} / ${PV.numPages}`;
     pvProgFill.style.width = Math.round((PV.curPage / PV.numPages) * 100) + '%';
     pvZoomLabel.textContent = Math.round(PV.zoom * 100) + '%';
-    pvThumbs.querySelectorAll('.pv-thumb').forEach(t => {
-      t.classList.toggle('active', parseInt(t.dataset.p, 10) === PV.curPage);
-    });
-    if (PV.name && PV.rawBytes) saveReadPosition(PV.name, PV.rawBytes.length, PV.curPage, PV.numPages);
+    if (pvThumbs.style.display && pvThumbs.style.display !== 'none') {
+      pvThumbs.querySelectorAll('.pv-thumb').forEach(t => {
+        t.classList.toggle('active', parseInt(t.dataset.p, 10) === PV.curPage);
+      });
+    }
+    if (PV.name && PV.rawBytes) {
+      clearTimeout(_savePosTimer);
+      const nm = PV.name, sz = PV.rawBytes.length, cp = PV.curPage, np = PV.numPages;
+      _savePosTimer = setTimeout(() => saveReadPosition(nm, sz, cp, np), 600);
+    }
   }
 
-  async function pvRenderPage(pNum) {
+  let _pvQueue = [];
+  let _pvPumping = false;
+  let _pvScrolling = false;
+  let _pvScrollIdleTimer = null;
+  let _pvRenderGen = 0;
+
+  function pvPruneFarPages() {
+    if (PV.mode !== 'scroll' || PV.rendered.size <= 9) return;
+    const keepRadius = 4;
+    for (const pNum of Array.from(PV.rendered)) {
+      if (Math.abs(pNum - PV.curPage) > keepRadius) {
+        const slot = pvPages.querySelector(`.pv-page[data-p="${pNum}"]`);
+        if (slot) {
+          const c = slot.querySelector('canvas');
+          if (c) { c.width = 0; c.height = 0; }
+          slot.innerHTML = `<div class="pv-skel">Page ${pNum}</div>`;
+        }
+        PV.rendered.delete(pNum);
+      }
+    }
+  }
+
+  function pvEnqueueRender(pNum) {
+    if (!PV.doc || PV.rendered.has(pNum) || PV.rendering.has(pNum)) return;
+    if (!_pvQueue.includes(pNum)) _pvQueue.push(pNum);
+    if (!_pvScrolling) pvPumpQueue();
+  }
+
+  async function pvPumpQueue() {
+    if (_pvPumping || !PV.doc) return;
+    _pvPumping = true;
+    const gen = _pvRenderGen;
+    try {
+      while (_pvQueue.length && PV.doc && gen === _pvRenderGen) {
+        if (_pvScrolling) break;
+        _pvQueue.sort((a, b) => Math.abs(a - PV.curPage) - Math.abs(b - PV.curPage));
+        const pNum = _pvQueue.shift();
+        if (pNum === undefined || PV.rendered.has(pNum) || PV.rendering.has(pNum)) continue;
+        if (PV.mode === 'scroll' && Math.abs(pNum - PV.curPage) > 4) continue;
+        await pvRenderPage(pNum, gen);
+        // Yield a frame between pages so touch scrolling stays 60fps
+        await new Promise(r => requestAnimationFrame(r));
+      }
+      if (gen === _pvRenderGen) pvPruneFarPages();
+    } finally {
+      _pvPumping = false;
+    }
+  }
+
+  pvPages?.addEventListener('scroll', () => {
+    _pvScrolling = true;
+    clearTimeout(_pvScrollIdleTimer);
+    _pvScrollIdleTimer = setTimeout(() => {
+      _pvScrolling = false;
+      pvPumpQueue();
+    }, 90);
+  }, { passive: true });
+
+  async function pvRenderPage(pNum, gen) {
     if (!PV.doc || PV.rendered.has(pNum) || PV.rendering.has(pNum)) return;
     const slot = pvPages.querySelector(`.pv-page[data-p="${pNum}"]`);
     if (!slot) return;
     PV.rendering.add(pNum);
     try {
       const page = await PV.doc.getPage(pNum);
+      if (gen !== undefined && gen !== _pvRenderGen) return;
       const rot = ((page.rotate || 0) + PV.rotation) % 360;
       const baseVp = page.getViewport({ scale: 1, rotation: rot });
       const availW = Math.max(260, pvPages.clientWidth - 16);
       const fitScale = availW / baseVp.width;
       const cssScale = fitScale * PV.zoom;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2.2);
+      const maxDpr = PV.zoom > 1.25 ? 1.75 : 1.45;
+      const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
       const vp = page.getViewport({ scale: cssScale * dpr, rotation: rot });
 
       let canvas = slot.querySelector('canvas');
@@ -440,15 +497,17 @@
       }
       canvas.width = Math.floor(vp.width);
       canvas.height = Math.floor(vp.height);
-      canvas.style.width = Math.floor(baseVp.width * cssScale) + 'px';
-      canvas.style.height = Math.floor(baseVp.height * cssScale) + 'px';
-      slot.style.minHeight = Math.floor(baseVp.height * cssScale) + 'px';
+      const cssW = Math.floor(baseVp.width * cssScale);
+      const cssH = Math.floor(baseVp.height * cssScale);
+      canvas.style.width = cssW + 'px';
+      canvas.style.height = cssH + 'px';
+      slot.style.minHeight = cssH + 'px';
 
       const ctx = canvas.getContext('2d', { alpha: false });
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       await page.render({ canvasContext: ctx, viewport: vp }).promise;
-      PV.rendered.add(pNum);
+      if (gen === undefined || gen === _pvRenderGen) PV.rendered.add(pNum);
     } catch (e) {
       console.error('Render page error', pNum, e);
     } finally {
@@ -458,6 +517,8 @@
 
   function pvRebuildLayout() {
     if (!PV.doc) return;
+    _pvRenderGen++;
+    _pvQueue = [];
     if (PV.io) PV.io.disconnect();
     PV.rendered.clear();
     PV.rendering.clear();
@@ -467,33 +528,35 @@
     const pagesToBuild = PV.mode === 'single' ? [PV.curPage] : Array.from({ length: PV.numPages }, (_, i) => i + 1);
     const estH = Math.round(Math.max(320, (pvPages.clientWidth - 16) * 1.414 * PV.zoom));
 
+    const frag = document.createDocumentFragment();
     pagesToBuild.forEach(p => {
       const slot = document.createElement('div');
       slot.className = 'pv-page';
       slot.dataset.p = String(p);
       slot.style.minHeight = estH + 'px';
       slot.innerHTML = `<div class="pv-skel">Page ${p}</div>`;
-      pvPages.appendChild(slot);
+      frag.appendChild(slot);
     });
+    pvPages.appendChild(frag);
 
     PV.io = new IntersectionObserver(entries => {
       let topMost = null;
       entries.forEach(en => {
         const p = parseInt(en.target.dataset.p, 10);
         if (en.isIntersecting) {
-          pvRenderPage(p);
-          if (en.intersectionRatio > 0.25 && (topMost === null || p < topMost)) topMost = p;
+          pvEnqueueRender(p);
+          if (en.intersectionRatio > 0.2 && (topMost === null || p < topMost)) topMost = p;
         }
       });
       if (PV.mode === 'scroll' && topMost !== null && topMost !== PV.curPage) {
         PV.curPage = topMost;
         pvUpdateMeta();
       }
-    }, { root: pvPages, rootMargin: '500px 0px', threshold: [0.01, 0.3] });
+    }, { root: pvPages, rootMargin: '220px 0px', threshold: [0.01, 0.25] });
 
     pvPages.querySelectorAll('.pv-page').forEach(el => PV.io.observe(el));
-    pvRenderPage(PV.curPage);
-    if (PV.mode === 'scroll' && PV.curPage + 1 <= PV.numPages) pvRenderPage(PV.curPage + 1);
+    pvEnqueueRender(PV.curPage);
+    if (PV.mode === 'scroll' && PV.curPage + 1 <= PV.numPages) pvEnqueueRender(PV.curPage + 1);
     pvUpdateMeta();
   }
 
@@ -507,7 +570,7 @@
       const el = pvPages.querySelector(`.pv-page[data-p="${target}"]`);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        pvRenderPage(target);
+        pvEnqueueRender(target);
       }
     }
     pvUpdateMeta();
@@ -781,11 +844,23 @@
   document.getElementById('pv-zin')?.addEventListener('click', () => setZoom(PV.zoom + 0.25));
   pvZoomLabel?.addEventListener('click', () => setZoom(1.0));
 
-  // Pinch-to-zoom, single-page swipe, double-tap zoom, and single-tap immersive mode
+  // Compositor-friendly pinch-to-zoom, single-page swipe, double-tap zoom, and single-tap immersive mode
   let _lastTap = 0;
   let _tapTimer = null;
   let _touchStartX = 0, _touchStartY = 0, _touchMoved = false;
   let _pinchDist0 = 0, _pinchScale = 1, _isPinching = false;
+
+  function onPinchMove(e) {
+    if (_isPinching && e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy) || 1;
+      _pinchScale = Math.max(0.55, Math.min(2.6, dist / _pinchDist0));
+      pvPages.style.transform = `scale(${_pinchScale.toFixed(3)})`;
+      pvPages.style.transformOrigin = 'center top';
+      e.preventDefault();
+    }
+  }
 
   pvPages?.addEventListener('touchstart', e => {
     if (e.touches.length === 2) {
@@ -796,6 +871,7 @@
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       _pinchDist0 = Math.hypot(dx, dy) || 1;
       _pinchScale = 1;
+      pvPages.addEventListener('touchmove', onPinchMove, { passive: false });
     } else if (e.touches.length === 1) {
       _isPinching = false;
       _touchMoved = false;
@@ -805,37 +881,37 @@
   }, { passive: true });
 
   pvPages?.addEventListener('touchmove', e => {
-    if (_isPinching && e.touches.length === 2) {
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      const dist = Math.hypot(dx, dy) || 1;
-      _pinchScale = Math.max(0.55, Math.min(2.6, dist / _pinchDist0));
-      pvPages.style.transform = `scale(${_pinchScale.toFixed(3)})`;
-      pvPages.style.transformOrigin = 'center top';
-      e.preventDefault();
-    } else if (e.touches.length === 1) {
+    if (!_isPinching && e.touches.length === 1) {
       const dx = Math.abs(e.touches[0].clientX - _touchStartX);
       const dy = Math.abs(e.touches[0].clientY - _touchStartY);
       if (dx > 12 || dy > 12) _touchMoved = true;
     }
-  }, { passive: false });
+  }, { passive: true });
+
+  function finishPinch() {
+    pvPages?.removeEventListener('touchmove', onPinchMove, { passive: false });
+    _isPinching = false;
+    if (pvPages) {
+      pvPages.style.transform = '';
+      pvPages.style.transformOrigin = '';
+    }
+    if (Math.abs(_pinchScale - 1) > 0.08) {
+      setZoom(PV.zoom * _pinchScale);
+    }
+    _pinchScale = 1;
+  }
+
+  pvPages?.addEventListener('touchcancel', () => {
+    if (_isPinching) finishPinch();
+  }, { passive: true });
 
   pvPages?.addEventListener('touchend', e => {
     if (_isPinching) {
-      if (e.touches.length < 2) {
-        _isPinching = false;
-        pvPages.style.transform = '';
-        pvPages.style.transformOrigin = '';
-        if (Math.abs(_pinchScale - 1) > 0.08) {
-          setZoom(PV.zoom * _pinchScale);
-        }
-        _pinchScale = 1;
-      }
+      if (e.touches.length < 2) finishPinch();
       return;
     }
     if (e.touches.length > 0) return;
 
-    // Horizontal swipe in single-page mode
     if (PV.mode === 'single' && PV.zoom <= 1.08 && e.changedTouches && e.changedTouches[0]) {
       const dx = e.changedTouches[0].clientX - _touchStartX;
       const dy = Math.abs(e.changedTouches[0].clientY - _touchStartY);
@@ -857,7 +933,7 @@
         if (PV.doc) pvStage.classList.toggle('pv-immersive');
       }, 280);
     }
-  });
+  }, { passive: true });
 
   let extPdfChunks = [];
   let extPdfName = 'document.pdf';
