@@ -43,7 +43,6 @@ jobs:
           rm -rf app/src/main/assets
           mkdir -p app/src/main/assets/vendor/lib app/src/main/assets/vendor/ffmpeg
           python3 scripts/build_android_ui.py
-          cp favicon.png app/src/main/assets/favicon.png
           cp -r vendor/lib/* app/src/main/assets/vendor/lib/
           cp -r vendor/ffmpeg/* app/src/main/assets/vendor/ffmpeg/
           if ! git diff --quiet index.html; then
@@ -78,10 +77,11 @@ jobs:
           TAG: ${{ steps.v.outputs.tag }}
         run: |
           NOTES=$(cat << 'EOF'
-          - Smooth 60fps PDF scrolling: passive compositor-thread touch scrolling, serialized page render queue, canvas memory recycling, and removed heavy blur layers
-          - Fixed oversized status bar / top header by removing double safe-area insets on Android and slimming the top bar
-          - Refined, crisp Material 3 animations for tab switching, bottom navigation glide, and bottom sheets (removed bouncy overshoot and competing row animations)
-          - Native first-page PDF thumbnails, grid/list view, sort, pinch-to-zoom, rotation, auto-resume, and password-protected PDF support
+          - White (light) theme is now default; switch to OLED dark mode anytime in Settings
+          - Custom in-app toasts with status icons across all actions (replacing default Android popups)
+          - Smooth animated loading skeleton when opening PDFs instead of an "Opening PDF" toast
+          - Fixed password-protected (locked) PDFs and Go-to-Page modal not opening
+          - Removed "Browse from Storage" card, restored full top bar height with clean status bar blending, and trimmed unneeded app files
           EOF
           )
           if gh release view "$TAG" >/dev/null 2>&1; then

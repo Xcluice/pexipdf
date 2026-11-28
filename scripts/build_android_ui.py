@@ -24,6 +24,12 @@ if "settings-dark-toggle" not in orig_js:
         "  if (window.PexiBridge && window.PexiBridge.setTheme) { try { window.PexiBridge.setTheme(!!isDark); } catch(_){} }"
     )
 
+# 1b. Default to white (light) theme unless user explicitly chose dark
+orig_js = orig_js.replace(
+    "if (localStorage.getItem('pexipdf_theme') === 'light') setTheme(false); else setTheme(true);",
+    "if (localStorage.getItem('pexipdf_theme') === 'dark') setTheme(true); else setTheme(false);"
+)
+
 # 2. FFmpeg corePath fallback for Android WebView (keeps APK ~1 MB)
 if "https://pexipdf.vercel.app" not in orig_js:
     orig_js = orig_js.replace(

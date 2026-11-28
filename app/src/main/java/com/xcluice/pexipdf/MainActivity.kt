@@ -61,6 +61,19 @@ class MainActivity : ComponentActivity() {
     private var webReady = false
     private var refreshPdfsOnResume = false
     private var pendingExternalPdfUri: Uri? = null
+    private fun showCustomToast(message: String, type: String = "info") {
+        val qm = JSONObject.quote(message)
+        val qt = JSONObject.quote(type)
+        runOnUiThread {
+            val wv = webView
+            if (wv != null && webReady) {
+                wv.evaluateJavascript("window.showToast && window.showToast($qm, 2600, $qt)", null)
+            } else {
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private var pendingCameraPermissionRequest: PermissionRequest? = null
     private var pendingNativeCameraLaunch = false
@@ -117,7 +130,7 @@ class MainActivity : ComponentActivity() {
         if (pendingNativeCameraLaunch) {
             pendingNativeCameraLaunch = false
             if (granted) launchSystemCamera()
-            else Toast.makeText(this, "Camera permission required", Toast.LENGTH_SHORT).show()
+            else showCustomToast("Camera permission required", "error")
         }
     }
 
@@ -138,7 +151,7 @@ class MainActivity : ComponentActivity() {
             }
         } else {
             pending.first.delete()
-            Toast.makeText(this, "Storage permission needed to save to Downloads", Toast.LENGTH_LONG).show()
+            showCustomToast("Storage permission needed to save to Downloads", "error")
         }
     }
 
@@ -190,7 +203,7 @@ class MainActivity : ComponentActivity() {
             } catch (_: Exception) {
                 photoFile.delete()
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "Photo import failed", Toast.LENGTH_SHORT).show()
+                    showCustomToast("Photo import failed", "error")
                 }
             }
         }
@@ -204,7 +217,7 @@ class MainActivity : ComponentActivity() {
             val uri = FileProvider.getUriForFile(this, "${packageName}.files", f)
             takePictureLauncher.launch(uri)
         } catch (_: Exception) {
-            Toast.makeText(this, "Could not open camera", Toast.LENGTH_SHORT).show()
+            showCustomToast("Could not open camera", "error")
         }
     }
 
@@ -478,7 +491,7 @@ class MainActivity : ComponentActivity() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "Could not open PDF: ${e.message}", Toast.LENGTH_LONG).show()
+                    showCustomToast("Could not open PDF: ${e.message}", "error")
                 }
             }
         }
@@ -496,7 +509,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        applySystemBars(isDark = true)
+        applySystemBars(isDark = false)
         pendingExternalPdfUri = extractPdfUri(intent)
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -520,7 +533,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val updateState by Updater.state.collectAsState()
-            var darkTheme by remember { mutableStateOf(true) }
+            var darkTheme by remember { mutableStateOf(false) }
 
             when (val u = updateState) {
                 is UpdateState.Required -> ForceUpdateScreen(u)
@@ -528,7 +541,7 @@ class MainActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(if (darkTheme) Color(0xFF0A0A0C) else Color(0xFFF4F4F5))
+                            .background(if (darkTheme) Color(0xFF141417) else Color(0xFFFFFFFF))
                             .systemBarsPadding()
                     ) {
                         AndroidView(
@@ -572,7 +585,7 @@ class MainActivity : ComponentActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            setBackgroundColor(AndroidColor.parseColor("#0A0A0C"))
+            setBackgroundColor(AndroidColor.parseColor("#F4F4F5"))
             overScrollMode = WebView.OVER_SCROLL_NEVER
 
             settings.apply {
@@ -737,20 +750,12 @@ class MainActivity : ComponentActivity() {
                 tempFile.delete()
             }
             withContext(Dispatchers.Main) {
-                Toast.makeText(
-                    this@MainActivity,
-                    "Saved to Downloads/PexiPDF/$safeName",
-                    Toast.LENGTH_LONG
-                ).show()
+                showCustomToast("Saved to Downloads/PexiPDF/$safeName", "success")
             }
         } catch (e: Exception) {
             tempFile.delete()
             withContext(Dispatchers.Main) {
-                Toast.makeText(
-                    this@MainActivity,
-                    "Save failed: ${e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
+                showCustomToast("Save failed: ${e.message}", "error")
             }
         }
     }
@@ -773,11 +778,7 @@ class MainActivity : ComponentActivity() {
         } catch (e: Exception) {
             tempFile.delete()
             withContext(Dispatchers.Main) {
-                Toast.makeText(
-                    this@MainActivity,
-                    "Share failed: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                showCustomToast("Share failed: ${e.message}", "error")
             }
         }
     }
@@ -860,11 +861,7 @@ class MainActivity : ComponentActivity() {
                 val res = Updater.check()
                 if (res !is UpdateState.Required) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "PexiPDF v${BuildConfig.VERSION_NAME} is up to date",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        showCustomToast("PexiPDF v${BuildConfig.VERSION_NAME} is up to date", "success")
                     }
                 }
             }
