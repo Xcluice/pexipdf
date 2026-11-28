@@ -10,6 +10,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="theme-color" content="#0A0A0C">
 <meta name="mobile-web-app-capable" content="yes">
+<script>if(window.PexiBridge)document.documentElement.classList.add("is-android-app");</script>
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet" crossorigin="anonymous">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,17 +36,19 @@
     --red: #C81E1E;
     --green: #25855A;
     --amber: #B87B1F;
-    --bar-bg: rgba(244, 244, 245, 0.88);
+    --bar-bg: rgba(250, 250, 252, 0.96);
     --sheet-scrim: rgba(0, 0, 0, 0.56);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.14);
-    --ease: cubic-bezier(0.22, 1, 0.36, 1);
-    --spring: cubic-bezier(0.34, 1.48, 0.64, 1);
+    --ease: cubic-bezier(0.2, 0, 0, 1);
+    --spring: cubic-bezier(0.2, 0, 0, 1);
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bot: env(safe-area-inset-bottom, 0px);
-    --topbar-h: 60px;
-    --bnav-h: 68px;
+    --topbar-h: 50px;
+    --bnav-h: 62px;
   }
+
+  :root.is-android-app { --safe-top: 0px; --safe-bot: 0px; --topbar-h: 48px; }
 
   :root.dark {
     --bg: #0A0A0C;
@@ -64,7 +67,7 @@
     --red: #E5484D;
     --green: #4DB887;
     --amber: #E0A84B;
-    --bar-bg: rgba(16, 16, 20, 0.84);
+    --bar-bg: rgba(18, 18, 22, 0.96);
     --sheet-scrim: rgba(0, 0, 0, 0.74);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
     --shadow-md: 0 16px 40px rgba(0, 0, 0, 0.65);
@@ -89,38 +92,36 @@
   #aurora::before {
     content: ''; position: absolute; inset: -32px;
     background-image: radial-gradient(circle, var(--border) 1px, transparent 1.4px);
-    background-size: 26px 26px; opacity: 0.5; animation: gridDrift 45s linear infinite;
+    background-size: 26px 26px; opacity: 0.38;
     -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 72%);
             mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, transparent 72%);
   }
-  @keyframes gridDrift { to { transform: translate(26px, 26px); } }
-
-  .app-shell { position: relative; z-index: 2; height: 100%; width: 100%; max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; transition: transform .36s cubic-bezier(0.22, 1, 0.36, 1), filter .36s ease; transform-origin: center top; }
-  body.sheet-open .app-shell { transform: scale(0.968); filter: brightness(0.86); }
+  
+  .app-shell { position: relative; z-index: 2; height: 100%; width: 100%; max-width: 540px; margin: 0 auto; display: flex; flex-direction: column; }
 
   .app-topbar {
     position: sticky; top: 0; z-index: 30; height: calc(var(--topbar-h) + var(--safe-top));
-    padding: var(--safe-top) 16px 0; display: flex; align-items: center; gap: 11px;
-    background: var(--bar-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    padding: var(--safe-top) 14px 0; display: flex; align-items: center; gap: 9px;
+    background: var(--bar-bg);
     border-bottom: 1px solid var(--border); flex-shrink: 0;
   }
-  .app-brand-mark { width: 36px; height: 36px; border-radius: 11px; background: #C81E1E; color: #FFFFFF; display: grid; place-items: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(200,30,30,0.28); }
-  .app-brand-mark svg { width: 20px; height: 20px; display: block; }
-  .topbar-titles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-  .topbar-title-row { display: flex; align-items: baseline; gap: 6px; }
-  .header-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; line-height: 1.1; letter-spacing: -0.4px; color: var(--text); }
+  .app-brand-mark { width: 30px; height: 30px; border-radius: 9px; background: #C81E1E; color: #FFFFFF; display: grid; place-items: center; flex-shrink: 0; box-shadow: 0 1px 4px rgba(200,30,30,0.24); }
+  .app-brand-mark svg { width: 17px; height: 17px; display: block; }
+  .topbar-titles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0; }
+  .topbar-title-row { display: flex; align-items: baseline; gap: 5px; }
+  .header-title { font-family: 'Fraunces', serif; font-size: 17.5px; font-weight: 600; line-height: 1.1; letter-spacing: -0.35px; color: var(--text); }
   .header-title span { color: var(--accent); }
-  .xcluice-tag { font-size: 10px; font-weight: 600; color: var(--muted); }
-  .header-sub { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; }
+  .xcluice-tag { font-size: 9.5px; font-weight: 600; color: var(--muted); }
+  .header-sub { font-size: 10.5px; color: var(--muted); display: flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; }
   .tagline { display: inline-block; animation: flipIn .45s var(--ease) both; overflow: hidden; text-overflow: ellipsis; }
   @keyframes flipIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 
   .topbar-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   .top-pill { display: none; align-items: center; gap: 5px; height: 32px; padding: 0 11px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); border: none; font-size: 11.5px; font-weight: 600; cursor: pointer; }
   .top-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-  .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--text); display: grid; place-items: center; cursor: pointer; font-size: 15px; transition: transform .2s var(--spring); }
-  .icon-btn:active { transform: scale(0.9); }
-  .icon-btn svg { width: 17px; height: 17px; }
+  .icon-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--text); display: grid; place-items: center; cursor: pointer; font-size: 14px; transition: transform .12s ease-out; }
+  .icon-btn:active { transform: scale(0.92); }
+  .icon-btn svg { width: 16px; height: 16px; }
 
   #app-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding: 16px 16px calc(92px + var(--safe-bot)); scroll-behavior: smooth; }
   #app-scroll::-webkit-scrollbar { width: 0; height: 0; }
@@ -128,23 +129,11 @@
 
   .app-screen { display: none; flex-direction: column; gap: 16px; }
   .app-screen.active { display: flex; }
-  .app-screen.active.tg-from-right { animation: tgSlideRight .36s cubic-bezier(0.18, 0.9, 0.28, 1) both; }
-  .app-screen.active.tg-from-left  { animation: tgSlideLeft  .36s cubic-bezier(0.18, 0.9, 0.28, 1) both; }
+  .app-screen.active.tg-from-right { animation: tabInRight .18s var(--ease) both; }
+  .app-screen.active.tg-from-left  { animation: tabInLeft  .18s var(--ease) both; }
   .app-screen[data-screen="viewer"].active { height: 100%; gap: 0; }
-  @keyframes tgSlideRight { from { opacity: 0; transform: translateX(28px) scale(0.985); } to { opacity: 1; transform: none; } }
-  @keyframes tgSlideLeft  { from { opacity: 0; transform: translateX(-28px) scale(0.985); } to { opacity: 1; transform: none; } }
-
-  .app-screen.active .tool,
-  .app-screen.active .tool-row,
-  .app-screen.active .pref-group,
-  .pv-dev-row { animation: tgRowIn .38s cubic-bezier(0.22, 1.15, 0.36, 1) both; }
-  .tool:nth-child(1), .tool-row:nth-child(1), .pref-group:nth-of-type(1), .pv-dev-row:nth-child(1) { animation-delay: .02s; }
-  .tool:nth-child(2), .tool-row:nth-child(2), .pref-group:nth-of-type(2), .pv-dev-row:nth-child(2) { animation-delay: .05s; }
-  .tool:nth-child(3), .tool-row:nth-child(3), .pref-group:nth-of-type(3), .pv-dev-row:nth-child(3) { animation-delay: .08s; }
-  .tool:nth-child(4), .tool-row:nth-child(4), .pref-group:nth-of-type(4), .pv-dev-row:nth-child(4) { animation-delay: .11s; }
-  .pv-dev-row:nth-child(5) { animation-delay: .14s; }
-  .pv-dev-row:nth-child(6) { animation-delay: .17s; }
-  @keyframes tgRowIn { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+  @keyframes tabInRight { from { opacity: 0; transform: translate3d(10px, 0, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+  @keyframes tabInLeft  { from { opacity: 0; transform: translate3d(-10px, 0, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
 
   .section-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: -6px; padding: 2px 2px 0; }
   .section-label { font-size: 11.5px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; color: var(--muted); }
@@ -162,9 +151,7 @@
   .hero-copy { position: relative; z-index: 2; }
   .drop-title { font-size: 18px; font-weight: 700; letter-spacing: -0.25px; color: var(--on-ink); }
   .drop-sub { font-size: 12px; color: var(--on-ink); opacity: 0.72; margin-top: 3px; }
-  #dropzone .ring { position: absolute; right: 24px; top: 24px; width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid var(--on-ink); opacity: 0; animation: ring 3s ease-out infinite; pointer-events: none; }
-  #dropzone .ring.r2 { animation-delay: 1.5s; }
-  @keyframes ring { 0% { transform: scale(.55); opacity: .55; } 100% { transform: scale(2.8); opacity: 0; } }
+  #dropzone .ring { display: none; }
 
   .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; width: 100%; }
   .tool { --c1: var(--accent); position: relative; overflow: hidden; border: 1px solid var(--border); border-radius: 22px; padding: 15px; min-height: 110px; color: var(--text); text-align: left; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; background: var(--surface); box-shadow: var(--shadow); transition: transform .18s var(--spring), border-color .18s, background .18s; }
@@ -215,8 +202,7 @@
   #info-bar b { color: var(--text); font-weight: 600; }
 
   #gen-btn { width: 100%; height: 54px; background: var(--ink); color: var(--on-ink); border: none; border-radius: 999px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: var(--shadow-md); position: relative; overflow: hidden; transition: transform .18s var(--spring); }
-  #gen-btn::after { content: ''; position: absolute; top: 0; bottom: 0; width: 70px; left: -100px; background: linear-gradient(90deg, transparent, rgba(128,128,128,.38), transparent); transform: skewX(-20deg); animation: sweep 3.6s ease-in-out infinite; }
-  @keyframes sweep { 0%,45% { left: -100px; } 100% { left: 125%; } }
+  
   #gen-btn:active { transform: scale(0.965); }
   #gen-btn:disabled { opacity: 0.45; cursor: not-allowed; }
   #gen-btn:disabled::after { display: none; }
@@ -272,9 +258,9 @@
   #pv-sort-btn:active { transform: scale(0.92); }
 
   #pv-device-list { background: var(--surface); border: 1px solid var(--border); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow); }
-  .pv-dev-row { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 12px; text-align: left; color: var(--text); cursor: pointer; transition: transform .16s var(--spring), background .16s; }
+  .pv-dev-row { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 12px; text-align: left; color: var(--text); cursor: pointer; transition: background .12s ease-out; content-visibility: auto; contain-intrinsic-size: 76px; }
   .pv-dev-row:last-child { border-bottom: none; }
-  .pv-dev-row:active { background: var(--surface-sunken); transform: scale(0.982); }
+  .pv-dev-row:active { background: var(--surface-sunken); }
 
   .pv-dev-thumb { position: relative; width: 44px; height: 58px; border-radius: 9px; background: var(--surface-sunken); border: 1px solid var(--border); color: var(--accent); display: grid; place-items: center; flex-shrink: 0; overflow: hidden; }
   .pv-dev-thumb .pv-dev-fallback { width: 20px; height: 20px; opacity: 0.85; transition: opacity .2s; }
@@ -282,7 +268,7 @@
   .pv-dev-thumb.has-img img { opacity: 1; }
   .pv-dev-thumb.has-img .pv-dev-fallback { opacity: 0; }
   .pv-dev-thumb.is-locked { background: var(--accent-soft); }
-  .pv-dev-pg { position: absolute; bottom: 3px; right: 3px; font-size: 9px; font-weight: 700; line-height: 1; padding: 2px 5px; border-radius: 5px; background: rgba(10,10,12,0.78); color: #fff; backdrop-filter: blur(4px); font-variant-numeric: tabular-nums; }
+  .pv-dev-pg { position: absolute; bottom: 3px; right: 3px; font-size: 9px; font-weight: 700; line-height: 1; padding: 2px 5px; border-radius: 5px; background: rgba(10,10,12,0.82); color: #fff; font-variant-numeric: tabular-nums; }
 
   #pv-device-list.is-grid { background: transparent; border: none; box-shadow: none; overflow: visible; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   #pv-device-list.is-grid .pv-dev-row { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); }
@@ -326,15 +312,15 @@
   .pv-thumb span { font-size: 10px; font-weight: 700; color: var(--muted); }
   .pv-thumb.active span { color: var(--accent); }
 
-  .pv-pages { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; padding: 12px 8px 76px; display: flex; flex-direction: column; align-items: center; gap: 12px; background: var(--surface-sunken); }
-  .pv-page { position: relative; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: filter .25s var(--ease); }
+  .pv-pages { flex: 1; overflow-y: auto; overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-x pan-y; will-change: scroll-position; padding: 10px 8px 76px; display: flex; flex-direction: column; align-items: center; gap: 10px; background: var(--surface-sunken); }
+  .pv-page { position: relative; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16); display: flex; align-items: center; justify-content: center; flex-shrink: 0; contain: layout style paint; }
   .pv-page canvas { display: block; }
   .pv-skel { color: #777; font-size: 12px; font-weight: 600; padding: 40px 24px; }
   .pv-pnum { position: absolute; bottom: 8px; right: 8px; background: rgba(10,10,12,.72); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
   .pv-pages.theme-night .pv-page canvas { filter: invert(0.92) hue-rotate(180deg) contrast(0.95); }
   .pv-pages.theme-sepia .pv-page canvas { filter: sepia(0.32) brightness(0.96) contrast(0.96); }
 
-  .pv-dock { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 5px 8px; background: var(--bar-bg); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); border: 1px solid var(--border-strong); border-radius: 999px; box-shadow: var(--shadow-md); z-index: 20; animation: tgRowIn .36s cubic-bezier(0.34, 1.48, 0.64, 1) both; }
+  .pv-dock { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--bar-bg); border: 1px solid var(--border-strong); border-radius: 999px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28); z-index: 20; }
   .pv-dbtn { height: 32px; min-width: 32px; padding: 0 8px; border-radius: 999px; background: transparent; border: none; color: var(--text); font-size: 12px; font-weight: 700; cursor: pointer; display: grid; place-items: center; transition: transform .16s var(--spring); }
   .pv-dbtn svg { width: 16px; height: 16px; display: block; }
   .pv-dbtn:active { background: var(--surface-sunken); transform: scale(0.88); }
@@ -390,19 +376,17 @@
   /* ---------- TELEGRAM-STYLE FLOATING LIQUID-GLASS BOTTOM BAR ---------- */
   .bottom-nav {
     position: fixed;
-    bottom: calc(12px + var(--safe-bot));
+    bottom: calc(10px + var(--safe-bot));
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 28px);
     max-width: 440px;
-    height: 64px;
-    padding: 6px;
+    height: 60px;
+    padding: 5px;
     background: var(--bar-bg);
-    backdrop-filter: blur(28px) saturate(170%);
-    -webkit-backdrop-filter: blur(28px) saturate(170%);
     border: 1px solid var(--border-strong);
     border-radius: 999px;
-    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     align-items: center;
@@ -410,48 +394,41 @@
     isolation: isolate;
   }
   :root:not(.dark) .bottom-nav {
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
   }
   #bnav-indicator {
     position: absolute;
-    top: 6px;
-    bottom: 6px;
-    left: 6px;
-    width: calc((100% - 12px) / 4);
+    top: 5px;
+    bottom: 5px;
+    left: 5px;
+    width: calc((100% - 10px) / 4);
     border-radius: 999px;
     background: var(--accent-soft);
-    border: 1px solid rgba(229, 72, 77, 0.22);
+    border: 1px solid rgba(229, 72, 77, 0.20);
     z-index: 0;
     pointer-events: none;
     will-change: transform;
-    transition: transform .44s cubic-bezier(0.32, 1.32, 0.48, 1);
+    transition: transform .22s var(--ease);
   }
-  #bnav-indicator.gliding { filter: brightness(1.08); }
   .bnav-item {
     position: relative; z-index: 1; height: 100%; background: none; border: none;
     color: var(--muted); display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 2px; cursor: pointer; transition: color .22s var(--ease), transform .18s var(--spring);
+    gap: 2px; cursor: pointer; transition: color .18s var(--ease), transform .12s ease-out;
   }
-  .bnav-item:active { transform: scale(0.9); }
-  .bnav-pill { width: 32px; height: 24px; border-radius: 999px; display: grid; place-items: center; }
-  .bnav-pill svg { width: 20px; height: 20px; stroke-width: 1.95; }
+  .bnav-item:active { transform: scale(0.94); }
+  .bnav-pill { width: 32px; height: 22px; border-radius: 999px; display: grid; place-items: center; transition: transform .18s var(--ease); }
+  .bnav-pill svg { width: 19px; height: 19px; stroke-width: 1.95; }
   .bnav-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.1px; }
   .bnav-item.active { color: var(--accent); }
-  .bnav-item.active .bnav-pill { color: var(--accent); animation: tgIconPop .46s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  .bnav-item.active .bnav-pill { color: var(--accent); transform: translateY(-1px) scale(1.05); }
   .bnav-item.active .bnav-label { color: var(--accent); font-weight: 700; }
-  @keyframes tgIconPop {
-    0%   { transform: scale(0.82) translateY(1px); }
-    45%  { transform: scale(1.18) translateY(-2px); }
-    75%  { transform: scale(0.96) translateY(0); }
-    100% { transform: scale(1) translateY(0); }
-  }
 
-  .modal-overlay { position: fixed; inset: 0; background: var(--sheet-scrim); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: flex-end; backdrop-filter: blur(5px); animation: tgScrimIn .24s ease both; }
+  .modal-overlay { position: fixed; inset: 0; background: var(--sheet-scrim); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: flex-end; animation: tgScrimIn .18s ease-out both; }
   @keyframes tgScrimIn { from { opacity: 0; } to { opacity: 1; } }
   @media (min-width: 600px) { .modal-overlay { justify-content: center; padding: 20px; } }
-  .modal-box { background: var(--surface); border-radius: 28px 28px 0 0; width: 100%; max-width: 540px; padding: 10px 20px calc(20px + var(--safe-bot)); display: flex; flex-direction: column; gap: 14px; box-shadow: var(--shadow-md); border-top: 1px solid var(--border); max-height: 90vh; overflow-y: auto; animation: tgSheetSpring .44s cubic-bezier(0.24, 1.24, 0.38, 1) both; }
-  @media (min-width: 600px) { .modal-box { border-radius: 26px; border: 1px solid var(--border); padding: 16px 22px 22px; } }
-  @keyframes tgSheetSpring { 0% { opacity: 0; transform: translateY(64px) scale(0.96); } 65% { opacity: 1; transform: translateY(-3px) scale(1.005); } 100% { opacity: 1; transform: none; } }
+  .modal-box { background: var(--surface); border-radius: 26px 26px 0 0; width: 100%; max-width: 540px; padding: 10px 20px calc(20px + var(--safe-bot)); display: flex; flex-direction: column; gap: 14px; box-shadow: var(--shadow-md); border-top: 1px solid var(--border); max-height: 90vh; overflow-y: auto; animation: sheetUp .22s var(--ease) both; }
+  @media (min-width: 600px) { .modal-box { border-radius: 24px; border: 1px solid var(--border); padding: 16px 22px 22px; } }
+  @keyframes sheetUp { from { opacity: 0; transform: translate3d(0, 28px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
   .sheet-handle { width: 38px; height: 4px; border-radius: 999px; background: var(--border-strong); margin: 2px auto 4px; flex-shrink: 0; }
   .modal-box h2 { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; color: var(--text); }
   .modal-sub { font-size: 12.5px; color: var(--muted); margin-top: -8px; line-height: 1.45; }
@@ -536,7 +513,7 @@
   .lb-nav-btn { background: rgba(255,255,255,.16); border: none; color: #fff; width: 42px; height: 42px; border-radius: 50%; font-size: 20px; cursor: pointer; display: grid; place-items: center; }
   #lightbox-label { color: rgba(255,255,255,.8); font-size: 13px; font-weight: 600; min-width: 60px; text-align: center; }
 
-  #toast { position: fixed; bottom: calc(88px + var(--safe-bot)); left: 50%; transform: translateX(-50%) translateY(16px) scale(0.95); background: var(--ink); color: var(--on-ink); padding: 11px 18px; border-radius: 999px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .24s var(--ease), transform .4s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 300; box-shadow: var(--shadow-md); max-width: calc(100vw - 32px); white-space: nowrap; }
+  #toast { position: fixed; bottom: calc(88px + var(--safe-bot)); left: 50%; transform: translateX(-50%) translateY(16px) scale(0.95); background: var(--ink); color: var(--on-ink); padding: 11px 18px; border-radius: 999px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .18s var(--ease), transform .22s var(--ease); z-index: 300; box-shadow: var(--shadow-md); max-width: calc(100vw - 32px); white-space: nowrap; }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
   #confetti { position: fixed; inset: 0; z-index: 400; pointer-events: none; }
   .rip-host { position: relative; overflow: hidden; }
@@ -2464,13 +2441,11 @@ $('gt-run').addEventListener('click', async () => {
   function moveNavPill(idx, animate) {
     if (!bnavInd) return;
     if (!animate) bnavInd.style.transition = 'none';
-    bnavInd.classList.add('gliding');
-    bnavInd.style.transform = `translateX(${idx * 100}%)`;
+    bnavInd.style.transform = `translate3d(${idx * 100}%, 0, 0)`;
     if (!animate) {
       void bnavInd.offsetWidth;
       bnavInd.style.transition = '';
     }
-    setTimeout(() => bnavInd.classList.remove('gliding'), 420);
   }
 
   function switchTab(tab, opts) {
@@ -2506,15 +2481,7 @@ $('gt-run').addEventListener('click', async () => {
   }
   moveNavPill(0, false);
 
-  const sheetObserver = new MutationObserver(() => {
-    const anyOpen = Array.from(document.querySelectorAll('.modal-overlay')).some(
-      m => m.id !== 'camera-modal' && m.style.display && m.style.display !== 'none'
-    );
-    document.body.classList.toggle('sheet-open', anyOpen);
-  });
-  document.querySelectorAll('.modal-overlay').forEach(m => {
-    sheetObserver.observe(m, { attributes: true, attributeFilter: ['style'] });
-  });
+
   window.__pexiSwitchTab = switchTab;
 
   document.querySelectorAll('.bnav-item').forEach(btn => {
@@ -2852,30 +2819,97 @@ $('gt-run').addEventListener('click', async () => {
   const pvThemeBtn = document.getElementById('pv-theme-btn');
   const pvModeBtn = document.getElementById('pv-mode-btn');
 
+  let _savePosTimer = null;
   function pvUpdateMeta() {
     if (!PV.numPages) return;
     pvPagePill.textContent = `${PV.curPage} / ${PV.numPages}`;
     pvProgFill.style.width = Math.round((PV.curPage / PV.numPages) * 100) + '%';
     pvZoomLabel.textContent = Math.round(PV.zoom * 100) + '%';
-    pvThumbs.querySelectorAll('.pv-thumb').forEach(t => {
-      t.classList.toggle('active', parseInt(t.dataset.p, 10) === PV.curPage);
-    });
-    if (PV.name && PV.rawBytes) saveReadPosition(PV.name, PV.rawBytes.length, PV.curPage, PV.numPages);
+    if (pvThumbs.style.display && pvThumbs.style.display !== 'none') {
+      pvThumbs.querySelectorAll('.pv-thumb').forEach(t => {
+        t.classList.toggle('active', parseInt(t.dataset.p, 10) === PV.curPage);
+      });
+    }
+    if (PV.name && PV.rawBytes) {
+      clearTimeout(_savePosTimer);
+      const nm = PV.name, sz = PV.rawBytes.length, cp = PV.curPage, np = PV.numPages;
+      _savePosTimer = setTimeout(() => saveReadPosition(nm, sz, cp, np), 600);
+    }
   }
 
-  async function pvRenderPage(pNum) {
+  let _pvQueue = [];
+  let _pvPumping = false;
+  let _pvScrolling = false;
+  let _pvScrollIdleTimer = null;
+  let _pvRenderGen = 0;
+
+  function pvPruneFarPages() {
+    if (PV.mode !== 'scroll' || PV.rendered.size <= 9) return;
+    const keepRadius = 4;
+    for (const pNum of Array.from(PV.rendered)) {
+      if (Math.abs(pNum - PV.curPage) > keepRadius) {
+        const slot = pvPages.querySelector(`.pv-page[data-p="${pNum}"]`);
+        if (slot) {
+          const c = slot.querySelector('canvas');
+          if (c) { c.width = 0; c.height = 0; }
+          slot.innerHTML = `<div class="pv-skel">Page ${pNum}</div>`;
+        }
+        PV.rendered.delete(pNum);
+      }
+    }
+  }
+
+  function pvEnqueueRender(pNum) {
+    if (!PV.doc || PV.rendered.has(pNum) || PV.rendering.has(pNum)) return;
+    if (!_pvQueue.includes(pNum)) _pvQueue.push(pNum);
+    if (!_pvScrolling) pvPumpQueue();
+  }
+
+  async function pvPumpQueue() {
+    if (_pvPumping || !PV.doc) return;
+    _pvPumping = true;
+    const gen = _pvRenderGen;
+    try {
+      while (_pvQueue.length && PV.doc && gen === _pvRenderGen) {
+        if (_pvScrolling) break;
+        _pvQueue.sort((a, b) => Math.abs(a - PV.curPage) - Math.abs(b - PV.curPage));
+        const pNum = _pvQueue.shift();
+        if (pNum === undefined || PV.rendered.has(pNum) || PV.rendering.has(pNum)) continue;
+        if (PV.mode === 'scroll' && Math.abs(pNum - PV.curPage) > 4) continue;
+        await pvRenderPage(pNum, gen);
+        // Yield a frame between pages so touch scrolling stays 60fps
+        await new Promise(r => requestAnimationFrame(r));
+      }
+      if (gen === _pvRenderGen) pvPruneFarPages();
+    } finally {
+      _pvPumping = false;
+    }
+  }
+
+  pvPages?.addEventListener('scroll', () => {
+    _pvScrolling = true;
+    clearTimeout(_pvScrollIdleTimer);
+    _pvScrollIdleTimer = setTimeout(() => {
+      _pvScrolling = false;
+      pvPumpQueue();
+    }, 90);
+  }, { passive: true });
+
+  async function pvRenderPage(pNum, gen) {
     if (!PV.doc || PV.rendered.has(pNum) || PV.rendering.has(pNum)) return;
     const slot = pvPages.querySelector(`.pv-page[data-p="${pNum}"]`);
     if (!slot) return;
     PV.rendering.add(pNum);
     try {
       const page = await PV.doc.getPage(pNum);
+      if (gen !== undefined && gen !== _pvRenderGen) return;
       const rot = ((page.rotate || 0) + PV.rotation) % 360;
       const baseVp = page.getViewport({ scale: 1, rotation: rot });
       const availW = Math.max(260, pvPages.clientWidth - 16);
       const fitScale = availW / baseVp.width;
       const cssScale = fitScale * PV.zoom;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2.2);
+      const maxDpr = PV.zoom > 1.25 ? 1.75 : 1.45;
+      const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
       const vp = page.getViewport({ scale: cssScale * dpr, rotation: rot });
 
       let canvas = slot.querySelector('canvas');
@@ -2890,15 +2924,17 @@ $('gt-run').addEventListener('click', async () => {
       }
       canvas.width = Math.floor(vp.width);
       canvas.height = Math.floor(vp.height);
-      canvas.style.width = Math.floor(baseVp.width * cssScale) + 'px';
-      canvas.style.height = Math.floor(baseVp.height * cssScale) + 'px';
-      slot.style.minHeight = Math.floor(baseVp.height * cssScale) + 'px';
+      const cssW = Math.floor(baseVp.width * cssScale);
+      const cssH = Math.floor(baseVp.height * cssScale);
+      canvas.style.width = cssW + 'px';
+      canvas.style.height = cssH + 'px';
+      slot.style.minHeight = cssH + 'px';
 
       const ctx = canvas.getContext('2d', { alpha: false });
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       await page.render({ canvasContext: ctx, viewport: vp }).promise;
-      PV.rendered.add(pNum);
+      if (gen === undefined || gen === _pvRenderGen) PV.rendered.add(pNum);
     } catch (e) {
       console.error('Render page error', pNum, e);
     } finally {
@@ -2908,6 +2944,8 @@ $('gt-run').addEventListener('click', async () => {
 
   function pvRebuildLayout() {
     if (!PV.doc) return;
+    _pvRenderGen++;
+    _pvQueue = [];
     if (PV.io) PV.io.disconnect();
     PV.rendered.clear();
     PV.rendering.clear();
@@ -2917,33 +2955,35 @@ $('gt-run').addEventListener('click', async () => {
     const pagesToBuild = PV.mode === 'single' ? [PV.curPage] : Array.from({ length: PV.numPages }, (_, i) => i + 1);
     const estH = Math.round(Math.max(320, (pvPages.clientWidth - 16) * 1.414 * PV.zoom));
 
+    const frag = document.createDocumentFragment();
     pagesToBuild.forEach(p => {
       const slot = document.createElement('div');
       slot.className = 'pv-page';
       slot.dataset.p = String(p);
       slot.style.minHeight = estH + 'px';
       slot.innerHTML = `<div class="pv-skel">Page ${p}</div>`;
-      pvPages.appendChild(slot);
+      frag.appendChild(slot);
     });
+    pvPages.appendChild(frag);
 
     PV.io = new IntersectionObserver(entries => {
       let topMost = null;
       entries.forEach(en => {
         const p = parseInt(en.target.dataset.p, 10);
         if (en.isIntersecting) {
-          pvRenderPage(p);
-          if (en.intersectionRatio > 0.25 && (topMost === null || p < topMost)) topMost = p;
+          pvEnqueueRender(p);
+          if (en.intersectionRatio > 0.2 && (topMost === null || p < topMost)) topMost = p;
         }
       });
       if (PV.mode === 'scroll' && topMost !== null && topMost !== PV.curPage) {
         PV.curPage = topMost;
         pvUpdateMeta();
       }
-    }, { root: pvPages, rootMargin: '500px 0px', threshold: [0.01, 0.3] });
+    }, { root: pvPages, rootMargin: '220px 0px', threshold: [0.01, 0.25] });
 
     pvPages.querySelectorAll('.pv-page').forEach(el => PV.io.observe(el));
-    pvRenderPage(PV.curPage);
-    if (PV.mode === 'scroll' && PV.curPage + 1 <= PV.numPages) pvRenderPage(PV.curPage + 1);
+    pvEnqueueRender(PV.curPage);
+    if (PV.mode === 'scroll' && PV.curPage + 1 <= PV.numPages) pvEnqueueRender(PV.curPage + 1);
     pvUpdateMeta();
   }
 
@@ -2957,7 +2997,7 @@ $('gt-run').addEventListener('click', async () => {
       const el = pvPages.querySelector(`.pv-page[data-p="${target}"]`);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        pvRenderPage(target);
+        pvEnqueueRender(target);
       }
     }
     pvUpdateMeta();
@@ -3231,11 +3271,23 @@ $('gt-run').addEventListener('click', async () => {
   document.getElementById('pv-zin')?.addEventListener('click', () => setZoom(PV.zoom + 0.25));
   pvZoomLabel?.addEventListener('click', () => setZoom(1.0));
 
-  // Pinch-to-zoom, single-page swipe, double-tap zoom, and single-tap immersive mode
+  // Compositor-friendly pinch-to-zoom, single-page swipe, double-tap zoom, and single-tap immersive mode
   let _lastTap = 0;
   let _tapTimer = null;
   let _touchStartX = 0, _touchStartY = 0, _touchMoved = false;
   let _pinchDist0 = 0, _pinchScale = 1, _isPinching = false;
+
+  function onPinchMove(e) {
+    if (_isPinching && e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy) || 1;
+      _pinchScale = Math.max(0.55, Math.min(2.6, dist / _pinchDist0));
+      pvPages.style.transform = `scale(${_pinchScale.toFixed(3)})`;
+      pvPages.style.transformOrigin = 'center top';
+      e.preventDefault();
+    }
+  }
 
   pvPages?.addEventListener('touchstart', e => {
     if (e.touches.length === 2) {
@@ -3246,6 +3298,7 @@ $('gt-run').addEventListener('click', async () => {
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       _pinchDist0 = Math.hypot(dx, dy) || 1;
       _pinchScale = 1;
+      pvPages.addEventListener('touchmove', onPinchMove, { passive: false });
     } else if (e.touches.length === 1) {
       _isPinching = false;
       _touchMoved = false;
@@ -3255,37 +3308,37 @@ $('gt-run').addEventListener('click', async () => {
   }, { passive: true });
 
   pvPages?.addEventListener('touchmove', e => {
-    if (_isPinching && e.touches.length === 2) {
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      const dist = Math.hypot(dx, dy) || 1;
-      _pinchScale = Math.max(0.55, Math.min(2.6, dist / _pinchDist0));
-      pvPages.style.transform = `scale(${_pinchScale.toFixed(3)})`;
-      pvPages.style.transformOrigin = 'center top';
-      e.preventDefault();
-    } else if (e.touches.length === 1) {
+    if (!_isPinching && e.touches.length === 1) {
       const dx = Math.abs(e.touches[0].clientX - _touchStartX);
       const dy = Math.abs(e.touches[0].clientY - _touchStartY);
       if (dx > 12 || dy > 12) _touchMoved = true;
     }
-  }, { passive: false });
+  }, { passive: true });
+
+  function finishPinch() {
+    pvPages?.removeEventListener('touchmove', onPinchMove, { passive: false });
+    _isPinching = false;
+    if (pvPages) {
+      pvPages.style.transform = '';
+      pvPages.style.transformOrigin = '';
+    }
+    if (Math.abs(_pinchScale - 1) > 0.08) {
+      setZoom(PV.zoom * _pinchScale);
+    }
+    _pinchScale = 1;
+  }
+
+  pvPages?.addEventListener('touchcancel', () => {
+    if (_isPinching) finishPinch();
+  }, { passive: true });
 
   pvPages?.addEventListener('touchend', e => {
     if (_isPinching) {
-      if (e.touches.length < 2) {
-        _isPinching = false;
-        pvPages.style.transform = '';
-        pvPages.style.transformOrigin = '';
-        if (Math.abs(_pinchScale - 1) > 0.08) {
-          setZoom(PV.zoom * _pinchScale);
-        }
-        _pinchScale = 1;
-      }
+      if (e.touches.length < 2) finishPinch();
       return;
     }
     if (e.touches.length > 0) return;
 
-    // Horizontal swipe in single-page mode
     if (PV.mode === 'single' && PV.zoom <= 1.08 && e.changedTouches && e.changedTouches[0]) {
       const dx = e.changedTouches[0].clientX - _touchStartX;
       const dy = Math.abs(e.changedTouches[0].clientY - _touchStartY);
@@ -3307,7 +3360,7 @@ $('gt-run').addEventListener('click', async () => {
         if (PV.doc) pvStage.classList.toggle('pv-immersive');
       }, 280);
     }
-  });
+  }, { passive: true });
 
   let extPdfChunks = [];
   let extPdfName = 'document.pdf';
